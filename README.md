@@ -8,6 +8,7 @@ For Serverless workstation
 
 * Create a Amazon Linux AMI 2016-09, with the bootstrap.sh from this repository  (node -v 8.11.1; and npm -v 5.6.0)
 * git clone this folder and cd into signal bot
+  - use https://  and git config --global --edit  first
 * create an IAM user account with a Key for access to CLI  (NOTE: can I do this with server role instead?)
 * sls config credentials --provider aws --key <publickey> --secret <privatekey>
 * sls deploy
