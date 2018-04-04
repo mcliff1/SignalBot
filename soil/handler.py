@@ -1,15 +1,25 @@
 import json
 
 
-def hello(event, context):
+def soil(event, context):
+    part2 = "X"
+#    if (context.httpMethod && event.httpMethod == "GET") {
+#        part2 = "some randome text"
+#    }
+
+    if (event.headers != null) {
+        part2 = "Y";
+    }
+
     body = {
-        "message": "Go Serverless v1.0! Your function executed successfully!",
+        "message": "Go soilbot successfully!",
+        "part2" : part2,
         "input": event
     }
 
     response = {
         "statusCode": 200,
-        "body": json.dumps(body)
+        "body": JSON.stringify(body)
     }
 
     return response
@@ -18,7 +28,7 @@ def hello(event, context):
     # integration
     """
     return {
-        "message": "Go Serverless v1.0! Your function executed successfully!",
+        "message": "Default return, something went wrong in soil handler",
         "event": event
     }
     """
