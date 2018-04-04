@@ -3,23 +3,24 @@ import json
 
 def soil(event, context):
     part2 = "X"
+    operation = event['httpMethod']
+    payload = event['queryStringParameters'] if operation == 'GET' else json.loads(event['body'])
 #    if (context.httpMethod && event.httpMethod == "GET") {
 #        part2 = "some randome text"
 #    }
 
-    if (event.headers != null) {
-        part2 = "Y";
-    }
-
     body = {
         "message": "Go soilbot successfully!",
-        "part2" : part2,
+        "part2" : payload,
         "input": event
     }
 
     response = {
         "statusCode": 200,
-        "body": JSON.stringify(body)
+        "body": json.dumps(body),
+        "headers": {
+            "Content-Type" : "application/json",
+        },
     }
 
     return response
