@@ -47,10 +47,10 @@ provider:
 #    variable1: value1
 
 # you can add packaging information here
-#package:
-#  include:
+package:
+  include:
 #    - include-me.py
-#    - include-me-dir/**
+    - psycopg2/**
 #  exclude:
 #    - exclude-me.py
 #    - exclude-me-dir/**
@@ -73,31 +73,12 @@ functions:
           path: api/metrics/soil
           method: post
           cors: true
-#      - s3: ${env:BUCKET}
-#      - schedule: rate(10 minutes)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-#      - alexaSkill
-#      - alexaSmartHome: amzn1.ask.skill.xx-xx-xx-xx
-#      - iot:
-#          sql: "SELECT * FROM 'some_topic'"
-#      - cloudwatchEvent:
-#          event:
-#            source:
-#              - "aws.ec2"
-#            detail-type:
-#              - "EC2 Instance State-change Notification"
-#            detail:
-#              state:
-#                - pending
-#      - cloudwatchLog: '/aws/lambda/hello'
-#      - cognitoUserPool:
-#          pool: MyUserPool
-#          trigger: PreSignUp
-
 #    Define function environment variables here
-#    environment:
-#      variable2: value2
+    environment:
+      RDS_HOST: db.host.com
+      RDS_DBNAME: dbanme
+      RDS_USERNAME: username
+      RDS_PASSWORD: password
 
 # you can add CloudFormation resource templates here
 #resources:
