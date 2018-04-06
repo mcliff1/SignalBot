@@ -1,29 +1,39 @@
 #!/usr/bin/python
 #  python simulator code
 
+# curl -X POST https://5565netqr0.execute-api.us-west-2.amazoneaws.com/dev/api/metrics/soil -d '{ "beg" : "beg " }'
+
 import json
 import os
 import psycopg2
 import numpy as np
 
-rds_host = os.environ['RDS_HOST']
-rds_name = os.environ['RDS_DBNAME']
-rds_username = os.environ['RDS_USERNAME']
-rds_password = os.environ['RDS_PASSWORD']
 
+class SimBotClass:
 
-conn = None
+    def __init__(self, deviceid, tempf=80,
+                 soilmoisture1=3000, soilmoisture2=3000, soilmoisture3=1, 
+                 humidity=20.0, volts=5.0, battery=100.00):
+        self.deviceid = deviceid
+        self.tempf = tempf
+        self.soilmoisture1 = soilmoisture1
+        self.soilmoisture2 = soilmoisture2
+        self.soilmoisture3 = soilmoisture3
+        self.humidity = humidity
+        self.volts = volts
+        self.battery = battery
 
-def openConnection():
-    global conn
-    try:
-        if (conn is None):
-            conn = psycopg2.connect(dbname = rds_name, host = rds_host, user = rds_username, password = rds_password)
-        elif (not conn.open):
-            conn = psycopg2.connect(dbname = rds_name, host = rds_host, user = rds_username, password = rds_password)
-    except Exception as e:
-        print(e)
-        raise e
+    def status(self):
+        return { "beg" : "beg",
+                 "deviceid" : self.deviceid,
+                 "soilmoisture1" : self.soilmoisture1,
+                 "soilmoisture2" : self.soilmoisture2,
+                 "soilmoisture3" : self.soilmoisture3,
+                 "humidity" : self.humidity,
+                 "tempc" : (self.tempf-32)/(1.8),
+                 "tempf" : self.tempf,
+                 "volts" : self.volts,
+                 "batterty" : self.battery }
 
 
 
@@ -45,6 +55,8 @@ def simulateRecord():
     
 
 print("hello world")
-openConnection()
 print(simulateRecord())
 print("goodbye world")
+
+x = SimBotClass('testid0001')
+print(x.status())
