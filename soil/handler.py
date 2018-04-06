@@ -22,34 +22,44 @@ def openConnection():
     try:
         if (conn is None):
             conn = psycopg2.connect(host=rds_host, database=rds_dbname, user=rds_username, password=rds_password)
-        elif (not conn.open):
+        elif (conn.closed):
             conn = psycopg2.connect(host=rds_host, database=rds_dbname, user=rds_username, password=rds_password)
 
     except Exception as e:
-        logging.error(e)
+        logging.exception(e)
         raise e
 
 
 
 def insertSoil(x):
     logging.info("insertSoil: %s", x)
+    t = ( x['battery'],
+          x['humidity'],
+          x['soilmoisture1'],
+          x['soilmoisture2'],
+          x['soilmoisture3'],
+          x['tempc'],
+          x['tempf'],
+          x['volts'],
+          x['deviceid'])
+
     try:
         openConnection()
         cur = conn.cursor()
         logging.info("about to execute")
-        cur.execute("INSERT INTO soil_bot (battery, botid, bot_type, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid, sensor_number) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (111, 1223, 1, 123, 223, 123, 123, 99.1, 18.2, 24.3, 'aasdasds1', 1 ))
+        cur.execute("INSERT INTO soil_bot (battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", t)
         logging.info("about to commit")
         conn.commit()
         logging.info("finihed commit")
 
     except Exception as e:
-        logging.error(e)
+        logging.exception(e)
         # responseStatus = FAILD
     finally:
         if(conn is not None):
             conn.close()
 
-    return { "beg" : "beg" }
+    return json.dumps(t)
 
 
 def getSoil(x):

@@ -7,21 +7,35 @@ import json
 import os
 import psycopg2
 import numpy as np
+import time
+import urllib2
 
 
-class SimBotClass:
+TARGET_URL = "https://5565netqr0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/soil"
+
+class SimBot:
 
     def __init__(self, deviceid, tempf=80,
                  soilmoisture1=3000, soilmoisture2=3000, soilmoisture3=1, 
                  humidity=20.0, volts=5.0, battery=100.00):
         self.deviceid = deviceid
         self.tempf = tempf
+        self.tempc = (tempf-32)/1.8
         self.soilmoisture1 = soilmoisture1
         self.soilmoisture2 = soilmoisture2
         self.soilmoisture3 = soilmoisture3
         self.humidity = humidity
         self.volts = volts
         self.battery = battery
+
+    def update(self, ratio=1):
+        self.tempf += np.random.normal(0,0.1 * ratio)
+        self.soilmoisture1 += np.random.normal(0,5 * ratio)
+        self.soilmoisture2 += np.random.normal(0,5 * ratio)
+        #self.soilmoisture3 += np.random.normal(0,5 * ratio)
+        self.humidity += np.random.normal(0,0.1 * ratio)
+        self.volts += np.random.normal(0,0.01 * ratio)
+        self.battery += np.random.normal(0,0.5 * ratio)
 
     def status(self):
         return { "beg" : "beg",
@@ -33,30 +47,40 @@ class SimBotClass:
                  "tempc" : (self.tempf-32)/(1.8),
                  "tempf" : self.tempf,
                  "volts" : self.volts,
-                 "batterty" : self.battery }
+                 "battery" : self.battery }
 
 
 
-def simulateRecord():
-    tempf = 90 + np.random.normal(0,5)
-   
-    s = [{ "beg":"beg" }]
-    s[0]['deviceid'] = "0001ffffffff0001"
-    s[0]['soilmoisture1'] = 3300 + np.random.normal(0,50)
-    s[0]['soilmoisture2'] = 3500 + np.random.normal(0,50)
-    s[0]['soilmoisture3'] = 1
-    s[0]['humidity'] = 1
-    s[0]['tempc'] = 100 * (tempf - 32)/(212 - 32)
-    s[0]['volts'] = 4.2 + np.random.normal(0,.1)
-    s[0]['battery'] = 104 + np.random.normal(0,6)
+def postData(data):
+    req = urllib2.Request(TARGET_URL)
+    req.add_header('Content-Type', 'application/json')
+    jsondata = json.dumps(data)
+    jsondataasbytes = jsondata.encode('utf-8')
+    req.add_header('Content-Length', len(jsondataasbytes))
 
-    return s
+    response = urllib2.urlopen(req, jsondataasbytes)
+    print("send data")
+    return response
 
+
+
+bot = SimBot('1000aaaaffff0001')
+bot2 = SimBot('2000bbaaffff0002', tempf= 90)
+bot3 = SimBot('3000ccaaffff0003', soilmoisture1=2100, soilmoisture2=2000)
+bot4 = SimBot('4000ddaaffff0004', tempf = 100)
     
+while True:
+    bot.update(ratio=2)
+    bot2.update(ratio=1)
+    bot3.update(ratio=1)
+    bot4.update(ratio=1)
+    print(bot.status())
+    r = postData(bot.status())
+    r = postData(bot2.status())
+    r = postData(bot3.status())
+    r = postData(bot4.status())
+    #print("response code %s", r.code)
+    #print("response %s", r.read())
+    
+    time.sleep(5)
 
-print("hello world")
-print(simulateRecord())
-print("goodbye world")
-
-x = SimBotClass('testid0001')
-print(x.status())
