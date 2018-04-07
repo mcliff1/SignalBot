@@ -43,8 +43,11 @@ provider:
 #            - "/*"
 
 # you can define service wide environment variables here
-#  environment:
-#    variable1: value1
+  environment:
+    RDS_HOST: db.host.com
+    RDS_DBNAME: dbanme
+    RDS_USERNAME: username
+    RDS_PASSWORD: password
 
 # you can add packaging information here
 package:
@@ -61,9 +64,6 @@ functions:
     tags:
       created: serverless.yml for soil service
 
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
     events:
       - http:
           path: api/metrics/soil
@@ -73,12 +73,14 @@ functions:
           path: api/metrics/soil
           method: post
           cors: true
-#    Define function environment variables here
-    environment:
-      RDS_HOST: db.host.com
-      RDS_DBNAME: dbanme
-      RDS_USERNAME: username
-      RDS_PASSWORD: password
+
+#    environment:
+#      RDS_HOST: db.host.com
+#      RDS_DBNAME: dbanme
+#      RDS_USERNAME: username
+#      RDS_PASSWORD: password
+
+
 
 # you can add CloudFormation resource templates here
 #resources:

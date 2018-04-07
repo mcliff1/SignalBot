@@ -46,26 +46,48 @@ def openConnection():
 
 
 
-def insertSoil(x):
-    logging.info("insertSoil: %s", x)
-#    t = ( x['battery'],
-#          x['humidity'],
-#          x['soilmoisture1'],
-#          x['soilmoisture2'],
-#          x['soilmoisture3'],
-#          x['tempc'],
-#          x['tempf'],
-#          x['volts'],
-#          x['deviceid'])
-    t = getTuple(x, ('battery', 'humidity', 
-                     'soilmoisture1', 'soilmoisture2', 'soilmoisture3',
-                     'tempc', 'tempf', 'volts', 'deviceid'))
 
+
+def doCall(operations, event, context):
+    """
+    generic method to call with a set of mapped REST operations as input
+    """
+    operation = event['httpMethod']
+    if operation in operations:
+        payload = event['queryStringParameters'] if operation == 'GET' else json.loads(event['body'])
+        responseCode = 200
+        body = operations[operation](payload)
+    else:
+        logging.error("unknown method %s", operation)
+        responseCode = 503
+        body = { "message" : "something went wrong" }
+
+    return {
+        "statusCode": responseCode,
+        "body": json.dumps(body),
+        "headers": {
+            "Content-Type" : "application/json",
+        },
+    }
+    
+
+
+
+
+
+
+def insertReading(in_json, in_keys, in_sql):
+    """ 
+    generic function inserts keys from the json string
+    """
+
+    logging.info("insertReading: %s", in_json)
+    t = getTuple(in_json, in_keys)
     try:
         openConnection()
         cur = conn.cursor()
         logging.info("about to execute")
-        cur.execute("INSERT INTO soil_bot (created_at, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (now(), %s, %s, %s, %s, %s, %s, %s, %s, %s)", t)
+        cur.execute(in_sql, t)
         conn.commit()
         logging.info("commit complete")
     except Exception as e:
@@ -78,6 +100,45 @@ def insertSoil(x):
     return json.dumps(t)
 
 
+
+
+soil_keys = ( 'battery', 'humidity', 'soilmoisture1', 'soilmoisture2', 'soilmoisture3',
+              'tempc', 'tempf', 'volts', 'deviceid')
+soil_sql = "INSERT INTO soil_bot (created_at, version, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+
+def insertSoil(x):
+    return insertReading(x, soil_keys, soil_sql)
+
+
+def insertSoil2(x):
+    logging.info("insertSoil: %s", x)
+    in_keys = ( 'battery', 'humidity', 
+                     'soilmoisture1', 'soilmoisture2', 'soilmoisture3',
+                     'tempc', 'tempf', 'volts', 'deviceid')
+    t = getTuple(x, in_keys)
+
+    try:
+        openConnection()
+        cur = conn.cursor()
+        logging.info("about to execute")
+        cur.execute("INSERT INTO soil_bot (created_at, version, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)", t)
+        conn.commit()
+        logging.info("commit complete")
+    except Exception as e:
+        logging.exception(e)
+        # responseStatus = FAILD
+    finally:
+        if(conn is not None):
+            conn.close()
+
+
+    #r = insertReading(x, 
+
+    return json.dumps(t)
+
+
+
+
 def getSoil(x):
     logging.info("getcount")
     nrows = 0
@@ -86,6 +147,8 @@ def getSoil(x):
         cur = conn.cursor()
         cur.execute("SELECT count(*) from soil_bot;")
         nrows = cur.fetchone()[0]
+        cur.execute("SELECT created_at from soil_bot where created_at is not null order by created_at DESC limit 1");
+        last_update = cur.fetchone()[0]
     except Exception as e:
         logging.exception(e)
         # responseStatus = FAILD
@@ -93,20 +156,8 @@ def getSoil(x):
         if(conn is not None):
             conn.close()
 
-    jstr = { "cnt" : nrows }
+    jstr = { "cnt" : nrows, "lastUpdate": last_update.isoformat() }
     return jstr
-
-
-def getResponse(body):
-    ''' wraps the JSON body with appropriate response class
-    '''
-    return {
-        "statusCode": 200,
-        "body": json.dumps(body),
-        "headers": {
-            "Content-Type" : "application/json",
-        },
-    }
 
 
 
@@ -125,32 +176,10 @@ def soil(event, context):
         'POST' : lambda x: insertSoil(x),
         'GET': lambda x: getSoil(x)
     }
+    return doCall(operations, event, context)
 
-    operation = event['httpMethod']
-    if operation in operations:
-        payload = event['queryStringParameters'] if operation == 'GET' else json.loads(event['body'])
-        body = operations[operation](payload)
-    else:
-        logging.error("unknown method %s", operation)
-        body = { "message" : "something went wrong" }
 
-#    if (context.httpMethod && event.httpMethod == "GET") {
-#        part2 = "some randome text"
-#    }
 
-#    body = {
-#        "message": "Go soilbot successfully!",
-#        "part2" : payload,
-#        "input": event
-#    }
 
-    return getResponse(body)
 
-    # Use this code if you don't use the http event with the LAMBDA-PROXY
-    # integration
-    """
-    return {
-        "message": "Default return, something went wrong in soil handler",
-        "event": event
-    }
-    """
+

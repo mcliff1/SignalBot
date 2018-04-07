@@ -18,7 +18,14 @@ For Serverless workstation
 >  {"beg":"beg","deviceid":"3c003e000247353137323334","soilmoisture1":"3308","soilmoisture2":"3498","soilmoisture3":"1","humidity":"16.9000","tempc":"22.0000","tempf":"71.6000","volts":"4.2250","battery":"104.9375"}
   
   parameters for the PostGre SQL database string to connect too
- 
+
+## DB Tool
+
+If you have docker installed, this is a great tool
+
+```
+docker run -it -v /home/ec2-user/SignalBot:/scripts openbridge/ob_pysh-db psql -h dbid1.cwql9pca9fko.us-west-2.rds.amazonaws.com -p 5432 -U dbuser -d dbname1
+```
 
 ## Graph
 

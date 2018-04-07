@@ -88,7 +88,7 @@ class CureBot(SimBot):
         self.__infrared += np.random.normal(0,5 * ratio)
         self.__uvindex += np.random.normal(0,5 * ratio)
         self.__visible += np.random.normal(0,5 * ratio)
-        self.__humidity += np.random.normal(0,0.1 * ratio)
+        self.__humidity += np.random.normal(0,0.01 * ratio)
 
 
     def status(self):
@@ -110,7 +110,7 @@ class SoilBot(SimBot):
     """
 
     def __init__(self, deviceid, 
-                 soilmoisture1=3000, soilmoisture2=3000, soilmoisture3=1, 
+                 soilmoisture1=3000, soilmoisture2=3500, soilmoisture3=2500, 
                  humidity=20.0, **kwargs):
         """
         initialize the soil bot
@@ -125,8 +125,8 @@ class SoilBot(SimBot):
         super(SoilBot, self).update(ratio=1)
         self.__soilmoisture1 += np.random.normal(0,5 * ratio)
         self.__soilmoisture2 += np.random.normal(0,5 * ratio)
-        #self.__soilmoisture3 += np.random.normal(0,5 * ratio)
-        self.__humidity += np.random.normal(0,0.1 * ratio)
+        self.__soilmoisture3 += np.random.normal(0,5 * ratio)
+        self.__humidity += np.random.normal(0,0.01 * ratio)
 
 
     def status(self):
