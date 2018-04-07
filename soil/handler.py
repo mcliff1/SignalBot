@@ -17,7 +17,22 @@ rds_dbname = os.environ['RDS_DBNAME']
 conn = None
 
 
+def getTuple(in_dict, in_tuple):
+    """
+    generates an order tuple of values corresponding to the input key tuple
+    """
+    o = ()
+    for elem in in_tuple:
+        if (elem in in_dict):
+            o = o + (in_dict[elem],)
+        else:
+            o = o + (None, )
+    return o
+
 def openConnection():
+    """ 
+    opens connection to DB for Postgre using psycopg2 lib
+    """
     global conn
     try:
         if (conn is None):
@@ -33,25 +48,26 @@ def openConnection():
 
 def insertSoil(x):
     logging.info("insertSoil: %s", x)
-    t = ( x['battery'],
-          x['humidity'],
-          x['soilmoisture1'],
-          x['soilmoisture2'],
-          x['soilmoisture3'],
-          x['tempc'],
-          x['tempf'],
-          x['volts'],
-          x['deviceid'])
+#    t = ( x['battery'],
+#          x['humidity'],
+#          x['soilmoisture1'],
+#          x['soilmoisture2'],
+#          x['soilmoisture3'],
+#          x['tempc'],
+#          x['tempf'],
+#          x['volts'],
+#          x['deviceid'])
+    t = getTuple(x, ('battery', 'humidity', 
+                     'soilmoisture1', 'soilmoisture2', 'soilmoisture3',
+                     'tempc', 'tempf', 'volts', 'deviceid'))
 
     try:
         openConnection()
         cur = conn.cursor()
         logging.info("about to execute")
-        cur.execute("INSERT INTO soil_bot (battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", t)
-        logging.info("about to commit")
+        cur.execute("INSERT INTO soil_bot (created_at, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (now(), %s, %s, %s, %s, %s, %s, %s, %s, %s)", t)
         conn.commit()
-        logging.info("finihed commit")
-
+        logging.info("commit complete")
     except Exception as e:
         logging.exception(e)
         # responseStatus = FAILD
@@ -63,8 +79,22 @@ def insertSoil(x):
 
 
 def getSoil(x):
-    logging.info("nothing to see here")
-    return [{ "beg" : "beg" }]
+    logging.info("getcount")
+    nrows = 0
+    try:
+        openConnection()
+        cur = conn.cursor()
+        cur.execute("SELECT count(*) from soil_bot;")
+        nrows = cur.fetchone()[0]
+    except Exception as e:
+        logging.exception(e)
+        # responseStatus = FAILD
+    finally:
+        if(conn is not None):
+            conn.close()
+
+    jstr = { "cnt" : nrows }
+    return jstr
 
 
 def getResponse(body):
@@ -77,6 +107,12 @@ def getResponse(body):
             "Content-Type" : "application/json",
         },
     }
+
+
+
+
+
+
 
 
 def soil(event, context):
@@ -95,6 +131,7 @@ def soil(event, context):
         payload = event['queryStringParameters'] if operation == 'GET' else json.loads(event['body'])
         body = operations[operation](payload)
     else:
+        logging.error("unknown method %s", operation)
         body = { "message" : "something went wrong" }
 
 #    if (context.httpMethod && event.httpMethod == "GET") {

@@ -11,22 +11,31 @@ import time
 import urllib2
 
 
-TARGET_URL = "https://5565netqr0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/soil"
+TARGET_URL_SOIL = "https://5565netqr0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/soil"
 
 class SimBot:
+
+    def __init__(self, deviceid, 
+                 volts=5.0, battery=100.00):
+        self.deviceid = deviceid
+        self.volts = volts
+        self.battery = battery
+
+
+class SoilBot():
 
     def __init__(self, deviceid, tempf=80,
                  soilmoisture1=3000, soilmoisture2=3000, soilmoisture3=1, 
                  humidity=20.0, volts=5.0, battery=100.00):
         self.deviceid = deviceid
+        self.volts = volts
+        self.battery = battery
         self.tempf = tempf
         self.tempc = (tempf-32)/1.8
         self.soilmoisture1 = soilmoisture1
         self.soilmoisture2 = soilmoisture2
         self.soilmoisture3 = soilmoisture3
         self.humidity = humidity
-        self.volts = volts
-        self.battery = battery
 
     def update(self, ratio=1):
         self.tempf += np.random.normal(0,0.1 * ratio)
@@ -51,8 +60,12 @@ class SimBot:
 
 
 
-def postData(data):
-    req = urllib2.Request(TARGET_URL)
+def postData(bot):
+    """
+    posts the data to the URL end point
+    """
+    data = bot.status()
+    req = urllib2.Request(TARGET_URL_SOIL)
     req.add_header('Content-Type', 'application/json')
     jsondata = json.dumps(data)
     jsondataasbytes = jsondata.encode('utf-8')
@@ -64,23 +77,24 @@ def postData(data):
 
 
 
-bot = SimBot('1000aaaaffff0001')
-bot2 = SimBot('2000bbaaffff0002', tempf= 90)
-bot3 = SimBot('3000ccaaffff0003', soilmoisture1=2100, soilmoisture2=2000)
-bot4 = SimBot('4000ddaaffff0004', tempf = 100)
-    
+
+# make an array of these bots
+botArray = [
+    SoilBot('1200aaaaffff0021'),
+    SoilBot('1300aaaaffff0031'),
+    SoilBot('1400aaaaffff0041'),
+    SoilBot('1500aaaaffff0051', volts=3.4),
+    SoilBot('1600aaaaffff0061', battery=60),
+    SoilBot('1000aaaaffff0001'),
+    SoilBot('2000bbaaffff0002', tempf = 90),
+    SoilBot('3000ccaaffff0003', soilmoisture1=2100, soilmoisture2=2000),
+    SoilBot('4000ddaaffff0004', tempf = 100)
+]
+
+
 while True:
-    bot.update(ratio=2)
-    bot2.update(ratio=1)
-    bot3.update(ratio=1)
-    bot4.update(ratio=1)
-    print(bot.status())
-    r = postData(bot.status())
-    r = postData(bot2.status())
-    r = postData(bot3.status())
-    r = postData(bot4.status())
-    #print("response code %s", r.code)
-    #print("response %s", r.read())
-    
+    print("update and post")
+    list(map(lambda x:x.update(ratio=1), botArray))
+    list(map(lambda x: postData(x), botArray))
     time.sleep(5)
 
