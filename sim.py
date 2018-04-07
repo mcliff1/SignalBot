@@ -22,10 +22,8 @@ import numpy as np
 import time
 import urllib2
 
-url_endpoints = {
-    'soil' : "https://5565netqr0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/soil",
-    'cure' : "https://5565netqr0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/cure"
-}
+#url_base = "https://5565netqr0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
+url_base = "https://i00np3y1y6.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
 
 class SimBot(object):
     """
@@ -47,7 +45,7 @@ class SimBot(object):
         self.__tempc = (tempf-32)/1.8
 
     def __str__(self):
-        return("%s-%s" %s (self.__bottype, self.__deviceid))
+        return("%s-%s" % (self.__bottype, self.__deviceid))
 
     def type(self):
         return(self.__bottype)
@@ -145,15 +143,144 @@ class SoilBot(SimBot):
 
 
 
+
+
+
+class AquaBot(SimBot):
+    """
+    Aqua Bot extension
+    adds: ec, sal, sg, tds, ph, doxygen
+    """
+
+    def __init__(self, deviceid, 
+                 ec=4.45, sal=0, sg=1, tds=3, ph=7,
+                 doxygen=2.8, **kwargs):
+        """
+        initialize the aqua bot
+        """
+        super(AquaBot, self).__init__(deviceid, bottype='aqua', **kwargs)
+        self.__ec = ec
+        self.__sal = sal
+        self.__sg = sg
+        self.__tds = tds
+        self.__ph = ph
+        self.__doxygen = doxygen
+
+    def update(self, ratio=1):
+        super(AquaBot, self).update(ratio=1)
+        self.__ec += np.random.normal(0,0.01 * ratio)
+        self.__sal += np.random.normal(0,0.001 * ratio)
+        if (self.__sal < 0):
+            self.__sal = 0.01
+        self.__sg += np.random.normal(0,0.001 * ratio)
+        self.__tds += np.random.normal(0,0.01 * ratio)
+        self.__ph += np.random.normal(0,0.01 * ratio)
+        self.__doxygen += np.random.normal(0,0.01 * ratio)
+
+
+    def status(self):
+        jsondata = super(AquaBot, self).status()
+        jsondata['ec'] = self.__ec
+        jsondata['sal'] = self.__sal
+        jsondata['sg'] = self.__sg
+        jsondata['tds'] = self.__tds
+        jsondata['ph'] = self.__ph
+        jsondata['doxygen'] = self.__doxygen
+        return(jsondata)
+
+
+
+
+
+
+
+
+class LightBot(SimBot):
+    """
+    Light Bot extension
+    adds: lux, par, infrared, fullspec, visible, humidity
+    """
+
+    def __init__(self, deviceid, 
+                 lux=25, par=0.45, fullspec=280, visible=260, 
+                 infrared=180, humidity=20, **kwargs):
+        """
+        initialize the cure bot
+        """
+        super(LightBot, self).__init__(deviceid, bottype='light', **kwargs)
+        self.__lux = lux
+        self.__par = par
+        self.__fullspec = fullspec
+        self.__visible = visible
+        self.__infrared = infrared
+        self.__humidity = humidity
+
+    def update(self, ratio=1):
+        super(LightBot, self).update(ratio=1)
+        self.__infrared += np.random.normal(0,0.1 * ratio)
+        # dont change par or lux
+        self.__fullspec += np.random.normal(0,0.1 * ratio)
+        self.__visible += np.random.normal(0,0.1 * ratio)
+        self.__humidity += np.random.normal(0,0.01 * ratio)
+
+
+    def status(self):
+        jsondata = super(LightBot, self).status()
+        jsondata['par'] = self.__par
+        jsondata['lux'] = self.__lux
+        jsondata['infrared'] = self.__infrared
+        jsondata['fullspec'] = self.__fullspec
+        jsondata['visible'] = self.__visible
+        jsondata['humidity'] = self.__humidity
+        return(jsondata)
+
+
+
+
+
+
+
+
+class GasBot(SimBot):
+    """
+    Gas Bot extension
+    adds: carbondioxide
+    """
+
+    def __init__(self, deviceid, 
+                 carbondioxide=80,
+                 **kwargs):
+        """
+        initialize the gas bot
+        """
+        super(GasBot, self).__init__(deviceid, bottype='gas', **kwargs)
+        self.__carbondioxide = carbondioxide
+
+    def update(self, ratio=1):
+        super(GasBot, self).update(ratio=1)
+        self.__carbondioxide += np.random.normal(0,0.1 * ratio)
+
+
+    def status(self):
+        jsondata = super(GasBot, self).status()
+        jsondata['carbondioxide'] = self.__carbondioxide
+        return(jsondata)
+
+
+
+
+
+
+
 def postData(bot):
     """
     posts the data to the URL end point
     """
     data = bot.status()
-    target_url = url_endpoints[bot.type()]
-    if (bot.type() not in url_endpoints):
-        print("error, unknoen bot type");
+    #response = None
+    #if (bot.type() in url_endpoints):
 
+    target_url = url_base + bot.type()
     req = urllib2.Request(target_url)
     req.add_header('Content-Type', 'application/json')
     jsondata = json.dumps(data)
@@ -161,7 +288,7 @@ def postData(bot):
     req.add_header('Content-Length', len(jsondataasbytes))
 
     response = urllib2.urlopen(req, jsondataasbytes)
-    print("send data")
+    print("send %s" % bot)
     return response
 
 
@@ -176,7 +303,12 @@ botArray = [
     SoilBot('2000bbaaffff0002', tempf = 90),
     SoilBot('3000ccaaffff0003', soilmoisture1=2100, soilmoisture2=2000),
     CureBot('4000ccaacccc0004', tempf = 32),
-    CureBot('4100bbaacccc0014', tempf = 32),
+    AquaBot('5000ccaaaaaa0005'),
+    AquaBot('5100bbaaaaaa0015'),
+    LightBot('6000bbaa11110006'),
+    LightBot('6100bbaa11110016'),
+    LightBot('6200bbaa11110026'),
+    GasBot('7000bbaagggg0007'),
 ]
 
 

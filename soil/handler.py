@@ -106,10 +106,6 @@ keys_soil = ( 'battery', 'humidity', 'soilmoisture1', 'soilmoisture2', 'soilmois
               'tempc', 'tempf', 'volts', 'deviceid')
 sql_soil_ins = "INSERT INTO soil_bot (created_at, version, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
-def insertSoil(x):
-    return insertReading(x, keys_soil, sql_soil_ins)
-
-
 
 
 
@@ -117,8 +113,24 @@ keys_cure = ( 'battery', 'humidity', 'infrared', 'uvindex', 'visible',
               'tempc', 'tempf', 'volts', 'deviceid')
 sql_cure_ins = "INSERT INTO cure_bot (created_at, version, battery, humidity, infrared, uvindex, visible, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
-def insertCure(x):
-    return insertReading(x, keys_cure, sql_cure_ins)
+
+
+keys_aqua = ( 'battery', 'ec', 'sal', 'sg', 'tds', 'ph', 'doxygen',
+              'tempc', 'tempf', 'volts', 'deviceid')
+sql_aqua_ins = "INSERT INTO aqua_bot (created_at, version, battery, ec, sal, sg, tds, ph, doxygen, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+
+
+
+keys_gas = ( 'battery', 'carbondioxide',
+              'volts', 'deviceid')
+sql_gas_ins = "INSERT INTO gas_bot (created_at, version, battery, carbondioxide, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s)"
+
+
+keys_light = ( 'battery', 'humidity', 'infrared', 'fullspec', 'visible', 'lux', 'par',
+              'tempc', 'tempf', 'volts', 'deviceid')
+sql_light_ins = "INSERT INTO light_bot (created_at, version, battery, humidity, infrared, fullspec, visible, lux, par, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+
+
 
 
 
@@ -129,8 +141,9 @@ sql_cnt = "SELECT count(*) from %s"
 sql_latest = "SELECT created_at from %s where created_at is not null order by created_at DESC limit 1"
 
 def getCall(dbtable, x):
-    logging.info("getcount")
+    logging.info("getCall(%s)" % (dbtable,))
     nrows = 0
+    last_update = None
     try:
         openConnection()
         cur = conn.cursor()
@@ -145,7 +158,7 @@ def getCall(dbtable, x):
         if(conn is not None):
             conn.close()
 
-    jstr = { "cnt" : nrows, "lastUpdate": last_update.isoformat() }
+    jstr = { "cnt" : nrows, "lastUpdate": (last_update.isoformat() if last_update is not None else None) }
     return jstr
 
 
@@ -162,7 +175,7 @@ def soil(event, context):
     '''
 
     operations = {
-        'POST' : lambda x: insertSoil(x),
+        'POST' : lambda x: insertReading(x, keys_soil, sql_soil_ins),
         'GET': lambda x: getCall('soil_bot', x)
     }
     return doCall(operations, event, context)
@@ -176,8 +189,50 @@ def cure(event, context):
     '''
 
     operations = {
-        'POST' : lambda x: insertCure(x),
+        'POST' : lambda x: insertReading(x, keys_cure, sql_cure_ins),
         'GET': lambda x: getCall('cure_bot', x)
+    }
+    return doCall(operations, event, context)
+
+
+def aqua(event, context):
+    '''  this is our handler code in the Lambda function
+    REST interface for GET and POST
+    '''
+
+    operations = {
+        'POST' : lambda x: insertReading(x, keys_aqua, sql_aqua_ins),
+        'GET': lambda x: getCall('aqua_bot', x)
+    }
+    return doCall(operations, event, context)
+
+
+
+
+
+def gas(event, context):
+    '''  this is our handler code in the Lambda function
+    REST interface for GET and POST
+    '''
+
+    operations = {
+        'POST' : lambda x: insertReading(x, keys_gas, sql_gas_ins),
+        'GET': lambda x: getCall('gas_bot', x)
+    }
+    return doCall(operations, event, context)
+
+
+
+
+
+def light(event, context):
+    '''  this is our handler code in the Lambda function
+    REST interface for GET and POST
+    '''
+
+    operations = {
+        'POST' : lambda x: insertReading(x, keys_light, sql_light_ins),
+        'GET': lambda x: getCall('light_bot', x)
     }
     return doCall(operations, event, context)
 

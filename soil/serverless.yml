@@ -95,6 +95,54 @@ functions:
           method: post
           cors: true
 
+  aqua:
+    handler: handler.aqua
+    tags:
+      created: serverless for aqua service
+
+    events:
+      - http:
+          path: api/metrics/aqua
+          method: get
+          cors: true
+      - http:
+          path: api/metrics/aqua
+          method: post
+          cors: true
+
+  gas:
+    handler: handler.gas
+    tags:
+      created: serverless for gas service
+
+    events:
+      - http:
+          path: api/metrics/gas
+          method: get
+          cors: true
+      - http:
+          path: api/metrics/gas
+          method: post
+          cors: true
+
+  light:
+    handler: handler.light
+    tags:
+      created: serverless for light service
+
+    events:
+      - http:
+          path: api/metrics/light
+          method: get
+          cors: true
+      - http:
+          path: api/metrics/light
+          method: post
+          cors: true
+
+
+
+
 
 # you can add CloudFormation resource templates here
 #resources:

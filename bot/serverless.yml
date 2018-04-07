@@ -1,0 +1,73 @@
+service: bot
+
+provider:
+  name: aws
+  runtime: python3.6
+  region: us-west-2
+
+# you can add statements to the Lambda function's IAM Role here
+#  iamRoleStatements:
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:ListBucket"
+#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:PutObject"
+#      Resource:
+#        Fn::Join:
+#          - ""
+#          - - "arn:aws:s3:::"
+#            - "Ref" : "ServerlessDeploymentBucket"
+#            - "/*"
+
+# you can define service wide environment variables here
+  environment:
+    RDS_HOST: db.host.com
+    RDS_DBNAME: dbname
+    RDS_USERNAME: username
+    RDS_PASSWORD: password
+
+  vpc:
+    securityGroupIds:
+      - sg-0ccfdaa19e7e112da
+    subnetIds:
+      - subnet-e7fae9bc
+      - subnet-abbde3cd
+      - subnet-caa4da82
+
+# you can add packaging information here
+package:
+  include:
+#    - include-me.py
+    - psycopg2/**
+
+functions:
+  sigbot:
+    handler: handler.handleBot
+    tags:
+      created: serverless for SignalBot service
+
+    events:
+      - http:
+          path: api/metrics/{bottype}
+          method: get
+          cors: true
+      - http:
+          path: api/metrics/{bottype}
+          method: post
+          cors: true
+
+
+
+# you can add CloudFormation resource templates here
+#resources:
+#  Resources:
+#    NewResource:
+#      Type: AWS::S3::Bucket
+#      Properties:
+#        BucketName: my-new-bucket
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
