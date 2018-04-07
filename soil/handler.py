@@ -102,56 +102,45 @@ def insertReading(in_json, in_keys, in_sql):
 
 
 
-soil_keys = ( 'battery', 'humidity', 'soilmoisture1', 'soilmoisture2', 'soilmoisture3',
+keys_soil = ( 'battery', 'humidity', 'soilmoisture1', 'soilmoisture2', 'soilmoisture3',
               'tempc', 'tempf', 'volts', 'deviceid')
-soil_sql = "INSERT INTO soil_bot (created_at, version, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+sql_soil_ins = "INSERT INTO soil_bot (created_at, version, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
 def insertSoil(x):
-    return insertReading(x, soil_keys, soil_sql)
-
-
-def insertSoil2(x):
-    logging.info("insertSoil: %s", x)
-    in_keys = ( 'battery', 'humidity', 
-                     'soilmoisture1', 'soilmoisture2', 'soilmoisture3',
-                     'tempc', 'tempf', 'volts', 'deviceid')
-    t = getTuple(x, in_keys)
-
-    try:
-        openConnection()
-        cur = conn.cursor()
-        logging.info("about to execute")
-        cur.execute("INSERT INTO soil_bot (created_at, version, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)", t)
-        conn.commit()
-        logging.info("commit complete")
-    except Exception as e:
-        logging.exception(e)
-        # responseStatus = FAILD
-    finally:
-        if(conn is not None):
-            conn.close()
-
-
-    #r = insertReading(x, 
-
-    return json.dumps(t)
+    return insertReading(x, keys_soil, sql_soil_ins)
 
 
 
 
-def getSoil(x):
+
+keys_cure = ( 'battery', 'humidity', 'infrared', 'uvindex', 'visible',
+              'tempc', 'tempf', 'volts', 'deviceid')
+sql_cure_ins = "INSERT INTO cure_bot (created_at, version, battery, humidity, infrared, uvindex, visible, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+
+def insertCure(x):
+    return insertReading(x, keys_cure, sql_cure_ins)
+
+
+
+
+
+
+sql_cnt = "SELECT count(*) from %s"
+sql_latest = "SELECT created_at from %s where created_at is not null order by created_at DESC limit 1"
+
+def getCall(dbtable, x):
     logging.info("getcount")
     nrows = 0
     try:
         openConnection()
         cur = conn.cursor()
-        cur.execute("SELECT count(*) from soil_bot;")
+        cur.execute(sql_cnt % dbtable)
         nrows = cur.fetchone()[0]
-        cur.execute("SELECT created_at from soil_bot where created_at is not null order by created_at DESC limit 1");
+        cur.execute(sql_latest % dbtable)
         last_update = cur.fetchone()[0]
     except Exception as e:
         logging.exception(e)
-        # responseStatus = FAILD
+        # responseStatus = 503
     finally:
         if(conn is not None):
             conn.close()
@@ -174,7 +163,21 @@ def soil(event, context):
 
     operations = {
         'POST' : lambda x: insertSoil(x),
-        'GET': lambda x: getSoil(x)
+        'GET': lambda x: getCall('soil_bot', x)
+    }
+    return doCall(operations, event, context)
+
+
+
+
+def cure(event, context):
+    '''  this is our handler code in the Lambd function
+    REST interface for GET and POST
+    '''
+
+    operations = {
+        'POST' : lambda x: insertCure(x),
+        'GET': lambda x: getCall('cure_bot', x)
     }
     return doCall(operations, event, context)
 

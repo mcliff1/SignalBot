@@ -45,24 +45,29 @@ provider:
 # you can define service wide environment variables here
   environment:
     RDS_HOST: db.host.com
-    RDS_DBNAME: dbanme
+    RDS_DBNAME: dbname
     RDS_USERNAME: username
     RDS_PASSWORD: password
+
+  vpc:
+    securityGroupIds:
+      - sg-0ccfdaa19e7e112da
+    subnetIds:
+      - subnet-e7fae9bc
+      - subnet-abbde3cd
+      - subnet-caa4da82
 
 # you can add packaging information here
 package:
   include:
 #    - include-me.py
     - psycopg2/**
-#  exclude:
-#    - exclude-me.py
-#    - exclude-me-dir/**
 
 functions:
   soil:
     handler: handler.soil
     tags:
-      created: serverless.yml for soil service
+      created: serverless for soil service
 
     events:
       - http:
@@ -74,12 +79,21 @@ functions:
           method: post
           cors: true
 
-#    environment:
-#      RDS_HOST: db.host.com
-#      RDS_DBNAME: dbanme
-#      RDS_USERNAME: username
-#      RDS_PASSWORD: password
 
+  cure:
+    handler: handler.cure
+    tags:
+      created: serverless for cure service
+
+    events:
+      - http:
+          path: api/metrics/cure
+          method: get
+          cors: true
+      - http:
+          path: api/metrics/cure
+          method: post
+          cors: true
 
 
 # you can add CloudFormation resource templates here
