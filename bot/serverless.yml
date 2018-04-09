@@ -44,7 +44,7 @@ package:
 
 functions:
   sigbot:
-    handler: handler.handleBot
+    handler: handler.handle_bot
     tags:
       created: serverless for SignalBot service
 

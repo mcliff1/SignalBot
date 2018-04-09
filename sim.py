@@ -1,29 +1,20 @@
 #!/usr/bin/python
-#  python simulator code
-
-# curl -X POST https://5565netqr0.execute-api.us-west-2.amazoneaws.com/dev/api/metrics/soil -d '{ "beg" : "beg " }'
-
-
-#  add some command line params
-
-#   -n number of bots
-#   
-#   -v -t soil   (verbose print a single soil bot to terminal)
-#
-#
-#
+"""
+  python Signal simulator code
+  author: Matt Cliff
+  created: April 7, 2018
 
 
+  TODO: add some command line params
+   -n number of bots
+
+   -v -t soil   (verbose print a single soil bot to terminal)
+"""
 
 import json
-import os
-import psycopg2
-import numpy as np
 import time
 import urllib2
-
-#url_base = "https://5565netqr0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
-url_base = "https://i00np3y1y6.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
+import numpy as np
 
 class SimBot(object):
     """
@@ -34,7 +25,7 @@ class SimBot(object):
                  volts=5.0, battery=100.00):
         """
         base initialization
-    
+
         for temp, we only initilize the farenheit
         """
         self.__deviceid = deviceid
@@ -48,22 +39,35 @@ class SimBot(object):
         return("%s-%s" % (self.__bottype, self.__deviceid))
 
     def type(self):
+        """
+        identifies the type of bot instance
+        """
         return(self.__bottype)
 
     def status(self):
-        return { 'beg':'beg', 
-                 'deviceid' : self.__deviceid,
-                 'bottype' : self.__bottype,
-                 'tempf' : self.__tempf,
-                 'tempc' : self.__tempc,
-                 'volts' : self.__volts,
-                 'battery' : self.__battery }
+        """
+        returns a JSON string describing itself
+        """
+        return {
+            'beg':'beg',
+            'deviceid' : self.__deviceid,
+            'bottype' : self.__bottype,
+            'tempf' : self.__tempf,
+            'tempc' : self.__tempc,
+            'volts' : self.__volts,
+            'battery' : self.__battery
+        }
 
     def update(self, ratio=1):
-        self.__volts += np.random.normal(0, 0.01 * ratio) 
-        self.__battery += np.random.normal(0, 0.5 * ratio) 
-        self.__tempf += np.random.normal(0,0.1 * ratio)
-        self.__tempc += np.random.normal(0,(0.1 * ratio)/1.8)
+        """
+        runs one time unit on the simulation to update with some noise
+        """
+        self.__volts += np.random.normal(0, 0.01 * ratio)
+        self.__battery += np.random.normal(0, 0.5 * ratio)
+        if self.__battery > 105:
+            self.__battery -= 1.5
+        self.__tempf += np.random.normal(0, 0.1 * ratio)
+        self.__tempc += np.random.normal(0, (0.1 * ratio)/1.8)
 
 
 
@@ -74,8 +78,8 @@ class CureBot(SimBot):
     adds: infrared, uvindex, visible, humidity
     """
 
-    def __init__(self, deviceid, 
-                 infrared=250, uvindex=0.02, visible=260, 
+    def __init__(self, deviceid,
+                 infrared=250, uvindex=0.02, visible=260,
                  humidity=20, **kwargs):
         """
         initialize the cure bot
@@ -88,10 +92,10 @@ class CureBot(SimBot):
 
     def update(self, ratio=1):
         super(CureBot, self).update(ratio=1)
-        self.__infrared += np.random.normal(0,0.1 * ratio)
-        self.__uvindex += np.random.normal(0,000.1 * ratio)
-        self.__visible += np.random.normal(0,0.1 * ratio)
-        self.__humidity += np.random.normal(0,0.01 * ratio)
+        self.__infrared += np.random.normal(0, 0.1 * ratio)
+        self.__uvindex += np.random.normal(0, 000.1 * ratio)
+        self.__visible += np.random.normal(0, 0.1 * ratio)
+        self.__humidity += np.random.normal(0, 0.01 * ratio)
 
 
     def status(self):
@@ -109,11 +113,11 @@ class CureBot(SimBot):
 class SoilBot(SimBot):
     """
     Soil Bot extension
-    adds: 3 moisture, humidity, 
+    adds: 3 moisture, humidity,
     """
 
-    def __init__(self, deviceid, 
-                 soilmoisture1=3000, soilmoisture2=3500, soilmoisture3=2500, 
+    def __init__(self, deviceid,
+                 soilmoisture1=3000, soilmoisture2=3500, soilmoisture3=2500,
                  humidity=20.0, **kwargs):
         """
         initialize the soil bot
@@ -126,10 +130,10 @@ class SoilBot(SimBot):
 
     def update(self, ratio=1):
         super(SoilBot, self).update(ratio=1)
-        self.__soilmoisture1 += np.random.normal(0,5 * ratio)
-        self.__soilmoisture2 += np.random.normal(0,5 * ratio)
-        self.__soilmoisture3 += np.random.normal(0,5 * ratio)
-        self.__humidity += np.random.normal(0,0.01 * ratio)
+        self.__soilmoisture1 += np.random.normal(0, 5 * ratio)
+        self.__soilmoisture2 += np.random.normal(0, 5 * ratio)
+        self.__soilmoisture3 += np.random.normal(0, 5 * ratio)
+        self.__humidity += np.random.normal(0, 0.01 * ratio)
 
 
     def status(self):
@@ -152,7 +156,7 @@ class AquaBot(SimBot):
     adds: ec, sal, sg, tds, ph, doxygen
     """
 
-    def __init__(self, deviceid, 
+    def __init__(self, deviceid,
                  ec=4.45, sal=0, sg=1, tds=3, ph=7,
                  doxygen=2.8, **kwargs):
         """
@@ -168,14 +172,14 @@ class AquaBot(SimBot):
 
     def update(self, ratio=1):
         super(AquaBot, self).update(ratio=1)
-        self.__ec += np.random.normal(0,0.01 * ratio)
-        self.__sal += np.random.normal(0,0.001 * ratio)
-        if (self.__sal < 0):
+        self.__ec += np.random.normal(0, 0.01 * ratio)
+        self.__sal += np.random.normal(0, 0.001 * ratio)
+        if self.__sal < 0:
             self.__sal = 0.01
-        self.__sg += np.random.normal(0,0.001 * ratio)
-        self.__tds += np.random.normal(0,0.01 * ratio)
-        self.__ph += np.random.normal(0,0.01 * ratio)
-        self.__doxygen += np.random.normal(0,0.01 * ratio)
+        self.__sg += np.random.normal(0, 0.001 * ratio)
+        self.__tds += np.random.normal(0, 0.01 * ratio)
+        self.__ph += np.random.normal(0, 0.01 * ratio)
+        self.__doxygen += np.random.normal(0, 0.01 * ratio)
 
 
     def status(self):
@@ -201,8 +205,8 @@ class LightBot(SimBot):
     adds: lux, par, infrared, fullspec, visible, humidity
     """
 
-    def __init__(self, deviceid, 
-                 lux=25, par=0.45, fullspec=280, visible=260, 
+    def __init__(self, deviceid,
+                 lux=25, par=0.45, fullspec=280, visible=260,
                  infrared=180, humidity=20, **kwargs):
         """
         initialize the cure bot
@@ -217,11 +221,11 @@ class LightBot(SimBot):
 
     def update(self, ratio=1):
         super(LightBot, self).update(ratio=1)
-        self.__infrared += np.random.normal(0,0.1 * ratio)
+        self.__infrared += np.random.normal(0, 0.1 * ratio)
         # dont change par or lux
-        self.__fullspec += np.random.normal(0,0.1 * ratio)
-        self.__visible += np.random.normal(0,0.1 * ratio)
-        self.__humidity += np.random.normal(0,0.01 * ratio)
+        self.__fullspec += np.random.normal(0, 0.1 * ratio)
+        self.__visible += np.random.normal(0, 0.1 * ratio)
+        self.__humidity += np.random.normal(0, 0.01 * ratio)
 
 
     def status(self):
@@ -247,7 +251,7 @@ class GasBot(SimBot):
     adds: carbondioxide
     """
 
-    def __init__(self, deviceid, 
+    def __init__(self, deviceid,
                  carbondioxide=80,
                  **kwargs):
         """
@@ -258,7 +262,7 @@ class GasBot(SimBot):
 
     def update(self, ratio=1):
         super(GasBot, self).update(ratio=1)
-        self.__carbondioxide += np.random.normal(0,0.1 * ratio)
+        self.__carbondioxide += np.random.normal(0, 0.1 * ratio)
 
 
     def status(self):
@@ -268,19 +272,18 @@ class GasBot(SimBot):
 
 
 
+#----------------------end section for class defition
 
 
 
-
-def postData(bot):
+def post_data(bot, url):
     """
-    posts the data to the URL end point
+    posts the status data to the URL end point:  url+bot.type()
     """
     data = bot.status()
     #response = None
     #if (bot.type() in url_endpoints):
-
-    target_url = url_base + bot.type()
+    target_url = url + bot.type()
     req = urllib2.Request(target_url)
     req.add_header('Content-Type', 'application/json')
     jsondata = json.dumps(data)
@@ -293,16 +296,29 @@ def postData(bot):
 
 
 
+def main(sleep_time, bot_list, url):
+    """
+    Continuous loop to post all bots to the URL
+    """
+    while True:
+        print("update and post, sleep for %s seconds" % (sleep_time,))
+        list(map(lambda x: x.update(ratio=1), bot_list))
+        list(map(lambda x: post_data(x, url), BOT_ARRAY))
+        #list(map(post_data, bot_list))
+        time.sleep(sleep_time)
+
+
+
 
 # make an array of these bots
-botArray = [
+BOT_ARRAY = [
     SoilBot('1200aaaaffff0021'),
     SoilBot('1300aaaaffff0031'),
     SoilBot('1500aaaaffff0051', volts=3.4),
     SoilBot('1600aaaaffff0061', battery=60),
-    SoilBot('2000bbaaffff0002', tempf = 90),
+    SoilBot('2000bbaaffff0002', tempf=90),
     SoilBot('3000ccaaffff0003', soilmoisture1=2100, soilmoisture2=2000),
-    CureBot('4000ccaacccc0004', tempf = 32),
+    CureBot('4000ccaacccc0004', tempf=32),
     AquaBot('5000ccaaaaaa0005'),
     AquaBot('5100bbaaaaaa0015'),
     LightBot('6000bbaa11110006'),
@@ -312,10 +328,4 @@ botArray = [
 ]
 
 
-sleep_time = 5
-while True:
-    print("update and post, sleep for %s seconds" % (sleep_time,))
-    list(map(lambda x:x.update(ratio=1), botArray))
-    list(map(lambda x: postData(x), botArray))
-    time.sleep(sleep_time)
-
+main(sleep_time=5, bot_list=BOT_ARRAY, url="https://i00np3y1y6.execute-api.us-west-2.amazonaws.com/dev/api/metrics/")

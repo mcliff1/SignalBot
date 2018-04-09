@@ -1,3 +1,14 @@
+"""
+handler.py
+
+author: matt cliff
+created: april 8, 2018
+
+AWS lambda python 3.6 code
+provides RESTful endpoint to /api/metrics/{bottype}
+for: soil, cure, aqua, gas, and light bots
+  
+"""
 import os
 import json
 import logging
@@ -5,17 +16,19 @@ import logging
 import psycopg2
 
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+LOGGER = logging.getLogger()
+LOGGER.setLevel(logging.INFO)
+
+CONN = None
 
 # rds settings
-rds_host = os.environ['RDS_HOST']
-rds_username = os.environ['RDS_USERNAME']
-rds_password = os.environ['RDS_PASSWORD']
-rds_dbname = os.environ['RDS_DBNAME']
+RDS_HOST = os.environ['RDS_HOST']
+RDS_USERNAME = os.environ['RDS_USERNAME']
+RDS_PASSWORD = os.environ['RDS_PASSWORD']
+RDS_DBNAME = os.environ['RDS_DBNAME']
 
 
-bot_types = {
+BOT_TYPES = {
     'soil' : 'soil_bot',
     'cure' : 'cure_bot',
     'aqua' : 'aqua_bot',
@@ -23,133 +36,121 @@ bot_types = {
     'light' : 'light_bot',
 }
 
-keys_soil = ( 'battery', 'humidity', 'soilmoisture1', 'soilmoisture2', 'soilmoisture3', 'tempc', 'tempf', 'volts', 'deviceid')
-sql_soil_ins = "INSERT INTO soil_bot (created_at, version, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
-keys_cure = ( 'battery', 'humidity', 'infrared', 'uvindex', 'visible', 'tempc', 'tempf', 'volts', 'deviceid')
-sql_cure_ins = "INSERT INTO cure_bot (created_at, version, battery, humidity, infrared, uvindex, visible, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-
-keys_aqua = ( 'battery', 'ec', 'sal', 'sg', 'tds', 'ph', 'doxygen', 'tempc', 'tempf', 'volts', 'deviceid')
-sql_aqua_ins = "INSERT INTO aqua_bot (created_at, version, battery, ec, sal, sg, tds, ph, doxygen, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-
-keys_gas = ( 'battery', 'carbondioxide', 'volts', 'deviceid')
-sql_gas_ins = "INSERT INTO gas_bot (created_at, version, battery, carbondioxide, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s)"
-
-keys_light = ( 'battery', 'humidity', 'infrared', 'fullspec', 'visible', 'lux', 'par', 'tempc', 'tempf', 'volts', 'deviceid')
-sql_light_ins = "INSERT INTO light_bot (created_at, version, battery, humidity, infrared, fullspec, visible, lux, par, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-
-bot_keys = {
-    'soil' : keys_soil,
-    'cure' : keys_cure,
-    'aqua' : keys_aqua,
-    'gas' : keys_gas,
-    'light' : keys_light,
+BOT_KEYS = {
+    'soil' : ('battery', 'humidity', 'soilmoisture1', 'soilmoisture2', 'soilmoisture3', 'tempc', 'tempf', 'volts', 'deviceid'),
+    'cure' : ('battery', 'humidity', 'infrared', 'uvindex', 'visible', 'tempc', 'tempf', 'volts', 'deviceid'),
+    'aqua' : ('battery', 'ec', 'sal', 'sg', 'tds', 'ph', 'doxygen', 'tempc', 'tempf', 'volts', 'deviceid'),
+    'gas' : ('battery', 'carbondioxide', 'volts', 'deviceid'),
+    'light' : ('battery', 'humidity', 'infrared', 'fullspec', 'visible', 'lux', 'par', 'tempc', 'tempf', 'volts', 'deviceid'),
 }
 
 
-bot_sql_ins = {
-    'soil' : sql_soil_ins,
-    'cure' : sql_cure_ins,
-    'aqua' : sql_aqua_ins,
-    'gas' : sql_gas_ins,
-    'light' : sql_light_ins,
+BOT_SQL_INS = {
+    'soil' : "INSERT INTO soil_bot (created_at, version, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+    'cure' : "INSERT INTO cure_bot (created_at, version, battery, humidity, infrared, uvindex, visible, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+    'aqua' : "INSERT INTO aqua_bot (created_at, version, battery, ec, sal, sg, tds, ph, doxygen, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+    'gas' : "INSERT INTO gas_bot (created_at, version, battery, carbondioxide, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s)",
+    'light' : "INSERT INTO light_bot (created_at, version, battery, humidity, infrared, fullspec, visible, lux, par, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
 }
 
-conn = None
 
 
-def getTuple(in_dict, in_tuple):
+def get_tuple(in_dict, in_tuple):
     """
     generates an order tuple of values corresponding to the input key tuple
     """
-    o = ()
+    out_obj = ()
     for elem in in_tuple:
-        if (elem in in_dict):
-            o = o + (in_dict[elem],)
+        if elem in in_dict:
+            out_obj = out_obj + (in_dict[elem],)
         else:
-            o = o + (None, )
-    return o
+            out_obj = out_obj + (None, )
+    return out_obj
 
-def openConnection():
-    """ 
+
+def open_connection():
+    """
     opens connection to DB for Postgre using psycopg2 lib
     """
-    global conn
+    global CONN
     try:
-        if (conn is None):
-            conn = psycopg2.connect(host=rds_host, database=rds_dbname, user=rds_username, password=rds_password)
-        elif (conn.closed):
-            conn = psycopg2.connect(host=rds_host, database=rds_dbname, user=rds_username, password=rds_password)
+        if CONN is None:
+            CONN = psycopg2.connect(host=RDS_HOST, database=RDS_DBNAME,
+                                    user=RDS_USERNAME, password=RDS_PASSWORD)
+        elif CONN.closed:
+            CONN = psycopg2.connect(host=RDS_HOST, database=RDS_DBNAME,
+                                    user=RDS_USERNAME, password=RDS_PASSWORD)
 
-    except Exception as e:
-        logging.exception(e)
-        raise e
+    except Exception as sql_exception:
+        logging.exception(sql_exception)
+        raise sql_exception
 
 
 
 
 
 #def insertReading(in_json, in_keys, in_sql):
-def postCall(bot_type, in_json):
-    """ 
+def post_call(bot_type, in_json):
+    """
     generic function inserts keys from the json string
     """
 
     logging.info("insertReading: %s", in_json)
-    t = getTuple(in_json, bot_keys[bot_type])
+    data_vals = get_tuple(in_json, BOT_KEYS[bot_type])
     try:
-        openConnection()
-        cur = conn.cursor()
+        open_connection()
+        cur = CONN.cursor()
         logging.info("about to execute")
-        cur.execute(bot_sql_ins[bot_type], t)
-        conn.commit()
+        cur.execute(BOT_SQL_INS[bot_type], data_vals)
+        CONN.commit()
         logging.info("commit complete")
-    except Exception as e:
-        logging.exception(e)
+    except Exception as sql_exception:
+        logging.exception(sql_exception)
         # responseStatus = FAILD
     finally:
-        if(conn is not None):
-            conn.close()
+        if CONN is not None:
+            CONN.close()
 
-    return json.dumps(t)
-
-
+    return json.dumps(data_vals)
 
 
 
 
 
-sql_cnt = "SELECT count(*) from %s"
-sql_latest = "SELECT created_at from %s where created_at is not null order by created_at DESC limit 1"
 
-def getCall(bot_type, jsonstr):
+
+SQL_CNT = "SELECT count(*) from %s"
+SQL_GET_LATEST = "SELECT created_at from %s where created_at is not null order by created_at DESC limit 1"
+
+def get_call(bot_type, jsonstr):
     """
     Does the GET request for the specific bot type and given request string
     """
-    logging.info("getCall(%s, %s)" % (bot_type,jsonstr))
+    logging.info("get_call(%s, %s)" % (bot_type, jsonstr))
     nrows = 0
     last_update = None
     try:
-        openConnection()
-        cur = conn.cursor()
-        cur.execute(sql_cnt % bot_types[bot_type])
+        open_connection()
+        cur = CONN.cursor()
+        cur.execute(SQL_CNT % BOT_TYPES[bot_type])
         nrows = cur.fetchone()[0]
-        cur.execute(sql_latest % bot_types[bot_type])
+        cur.execute(SQL_GET_LATEST % BOT_TYPES[bot_type])
         last_update = cur.fetchone()[0]
-    except Exception as e:
-        logging.exception(e)
+    except Exception as sql_exception:
+        logging.exception(sql_exception)
         # responseStatus = 503
     finally:
-        if(conn is not None):
-            conn.close()
+        if CONN is not None:
+            CONN.close()
 
-    jstr = { "cnt" : nrows, 
-             "resource" : bot_type,
-             "lastUpdate": (last_update.isoformat() if last_update is not None else None) }
+    jstr = {"cnt" : nrows,
+            "resource" : bot_type,
+            "lastUpdate": (last_update.isoformat() if last_update is not None else None)}
     return jstr
 
 
-def handleBot1(event, context):
+def handle_bot_debug(event, context):
     """
     used for debugging
     """
@@ -164,7 +165,7 @@ def handleBot1(event, context):
 
 
 
-def handleBot(event, context):
+def handle_bot(event, context):
     '''  this is our handler code in the Lambda function
     REST interface for GET and POST
     '''
@@ -175,27 +176,25 @@ def handleBot(event, context):
 
     # get the first parameter from event
     operations = {
-        'POST' : lambda jsonstr, bot_type: postCall(bot_type, jsonstr),
-        'GET' : lambda jsonstr, bot_type: getCall(bot_type, jsonstr)
+        'POST' : lambda jsonstr, bot_type: post_call(bot_type, jsonstr),
+        'GET' : lambda jsonstr, bot_type: get_call(bot_type, jsonstr)
     }
 
     operation = event['httpMethod']
-    if (operation in operations and resource in bot_types):
+    if (operation in operations and resource in BOT_TYPES):
         payload = event['queryStringParameters'] if operation == 'GET' else json.loads(event['body'])
-        responseCode = 200
+        response_code = 200
         body = operations[operation](payload, resource)
 #        body = { 'resource' : ("%s" % resource), 'bottype' : bot_types[resource], 'event' : json.dumps(event) }
     else:
         logging.error("unknown method(%s) or resource(%s)", operation, resource)
-        responseCode = 503
-        body = { "message" : "unknown method(%s) or resource(%s)" % (operation, resource) }
+        response_code = 503
+        body = {"message" : "unknown method(%s) or resource(%s)" % (operation, resource)}
 
     return {
-        "statusCode": responseCode,
+        "statusCode": response_code,
         "body": json.dumps(body),
         "headers": {
             "Content-Type" : "application/json",
         },
     }
-
-
