@@ -28,6 +28,8 @@ provider:
     RDS_USERNAME: username
     RDS_PASSWORD: password
 
+# ideally this part would import as JSON from some AWS CLI command to see where our DB is running
+# in the mean time, these need to match
   vpc:
     securityGroupIds:
       - sg-0ccfdaa19e7e112da
