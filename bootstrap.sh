@@ -7,7 +7,7 @@
 # wget https://raw.githubusercontent.com/mcliff1/SignalBot/master/bootstrap.sh
 #echo "run 'git clone https://github.com/mcliff1/SignalBot'"
 
-sudo yum -y install git docker tmux
+sudo yum -y install git docker tmux jq
 
 # ensures we install 
 curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -
