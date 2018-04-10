@@ -18,9 +18,9 @@ sudo npm i -g serverless
 sudo npm i -g yarn
 #sls version
 
-sudo pip install numpy
-sudo pip install psycogpg2
-sudo pip install plyint
+sudo pip install -q numpy
+sudo pip install -q psycopg2
+sudo pip install -q pylint
 
 echo "run 'sls config credentials --provider aws --key <publickey> --secret <privatekey>'"
 
