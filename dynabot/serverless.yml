@@ -1,0 +1,72 @@
+service: dynabot
+
+frameworkVersion: ">=1.1.0 < 2.0.0"
+
+provider:
+  name: aws
+  runtime: python3.6
+  region: us-west-2
+
+  environment:
+    STAGE: "${opt:stage, self:provider.stage}"
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+
+functions:
+  dynabot:
+    handler: handler.handle_dynabot
+    tags:
+      created: serverless for dynabot
+
+    events:
+      - http:
+          path: api/metrics/{bottype}
+          method: get
+          cors: true
+      - http:
+          path: api/metrics/{bottype}
+          method: post
+          cors: true
+
+
+
+resources:
+  Resources:
+    DynaBotDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      #DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: Id
+            AttributeType: S
+          -
+            AttributeName: CreatedAt
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: Id
+            KeyType: HASH
+          -
+            AttributeName: CreatedAt
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+      
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
