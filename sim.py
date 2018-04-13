@@ -14,6 +14,7 @@
 import json
 import time
 import urllib2
+import argparse
 import numpy as np
 
 class SimBot(object):
@@ -291,15 +292,37 @@ def post_data(bot, url):
     req.add_header('Content-Length', len(jsondataasbytes))
 
     response = urllib2.urlopen(req, jsondataasbytes)
-    print("send %s" % bot)
+    print("send %s rc:%s" % (bot, response.code))
     return response
 
 
 
-def main(sleep_time, bot_list, url):
+def main(bot_list, url):
     """
     Continuous loop to post all bots to the URL
     """
+
+
+    parser = argparse.ArgumentParser(prog='sim', description='simulates Signal Bots generating and posting JSON data')
+    parser.add_argument('-f', '--foo', help='foo help')
+    parser.add_argument('-s', '--sleep', type=int, nargs='?', default=5, help='sleep time in seconds (default 5)')
+    parser.add_argument('-d', '--dump', help='dump a single record to stdout')
+    parser.add_argument('-u', '--url', help='URL to post to (does not include {bottype}', default=url)
+    args = vars(parser.parse_args())
+
+    sleep_time = args['sleep']
+    dump_type = args['dump']
+    url = args['url']  #  pull through the arg tool if updated
+ 
+    if dump_type is not None:
+        print("I really need to do something here with %s" % dump_type)
+        # exit the main method without going into the loop
+        bot = SoilBot("dummy000aaabbb")
+        print(bot.status())
+        return
+
+ 
+    print("POSTING to url %s%s" % (url, '{bottype}'))
     while True:
         print("update and post, sleep for %s seconds" % (sleep_time,))
         list(map(lambda x: x.update(ratio=1), bot_list))
@@ -328,5 +351,6 @@ BOT_ARRAY = [
 ]
 
 
-main(sleep_time=5, bot_list=BOT_ARRAY, url="https://i0959l88u2.execute-api.us-west-2.amazonaws.com/dev/api/metrics/")
-
+url_rds = "https://i0959l88u2.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
+url_ddb = "https://aix3s2f4w9.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
+main(bot_list=BOT_ARRAY, url=url_ddb)

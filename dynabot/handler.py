@@ -13,15 +13,41 @@ re: https://github.com/serverless/examples/blob/master/aws-python-rest-api-with-
   
 """
 import os
+import datetime
 import json
 import logging
+from decimal import Decimal
 
 import boto3
 dynamodb = boto3.resource('dynamodb')
+db_table = dynamodb.Table(os.environ['DYNAMODB_TABLE'])
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.INFO)
 
+
+def decode_json(dct):
+    """
+    wraps float with Decimal and general serialization to insert into dyanamo
+    """
+    for key, val in dct.items():
+        logging.info("1{%s, %s} type - %s", key, val, type(val))
+        if isinstance(val, float):
+            logging.info("setting %s to Decimal", key)
+            dct[key] = Decimal(str(val))
+            logging.info("type is %s", type(dct[key]))
+        else:
+            try:
+                dct[key] = TypeSerializer().serialize(val)
+            except:
+                dct[key] = val
+
+
+    # loop throught a second time
+    for key, val in dct.items():
+        logging.info("2{%s, %s} type - %s", key, val, type(val))
+
+    return dct
 
 
 
@@ -35,57 +61,44 @@ BOT_TYPES = {
 }
 
 
-# I don't think this is needed
-BOT_KEYS = {
-    'soil' : ('battery', 'humidity', 'soilmoisture1', 'soilmoisture2', 'soilmoisture3', 'tempc', 'tempf', 'volts', 'deviceid'),
-    'cure' : ('battery', 'humidity', 'infrared', 'uvindex', 'visible', 'tempc', 'tempf', 'volts', 'deviceid'),
-    'aqua' : ('battery', 'ec', 'sal', 'sg', 'tds', 'ph', 'doxygen', 'tempc', 'tempf', 'volts', 'deviceid'),
-    'gas' : ('battery', 'carbondioxide', 'volts', 'deviceid'),
-    'light' : ('battery', 'humidity', 'infrared', 'fullspec', 'visible', 'lux', 'par', 'tempc', 'tempf', 'volts', 'deviceid'),
-}
 
 
-
-def get_tuple(in_dict, in_tuple):
-    """
-    generates an order tuple of values corresponding to the input key tuple
-    """
-    out_obj = ()
-    for elem in in_tuple:
-        if elem in in_dict:
-            out_obj = out_obj + (in_dict[elem],)
-        else:
-            out_obj = out_obj + (None, )
-    return out_obj
-
-
-
-
-
-#def insertReading(in_json, in_keys, in_sql):
 def post_call(bot_type, in_json):
     """
     generic function inserts keys from the json string
+
+    TODO checks
+    - ensure bottype in payload matches from URI
+    - ensure deviceid exists
+    - do we drop the 'beg' attribute?
     """
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     logging.info("insertReading: %s", in_json)
-    data_vals = get_tuple(in_json, BOT_KEYS[bot_type])
+    rc = 503
+    jstr = None
     try:
-        open_connection()
-        cur = CONN.cursor()
         logging.info("about to execute")
-        cur.execute(BOT_SQL_INS[bot_type], data_vals)
-        CONN.commit()
-        logging.info("commit complete")
-    except Exception as sql_exception:
-        logging.exception(sql_exception)
-        # responseStatus = FAILD
-    finally:
-        if CONN is not None:
-            CONN.close()
+        ddb_json = decode_json(in_json)
+        ddb_json['CreatedAt'] = timestamp
+        ddb_json['Id'] = bot_type + "-" + ddb_json['deviceid']
+        db_table.put_item(Item=ddb_json)
+        rc = 200
+        #logging.info("class %s json - %s", type(ddb_json), ddb_json)
+        jstr = str(ddb_json)
+        #logging.info("commit complete")
+    except Exception as db_exception:
+        logging.exception(db_exception)
+        rc = 500
+        jstr = { "err" : json.loads(str(db_exception)) }
 
-    return json.dumps(data_vals)
-
+    return {
+        "body": json.dumps(jstr),
+        "statusCode" : rc,
+        "headers": {
+            "Content-Type" : "application/json",
+        },
+    }
 
 
 
@@ -97,37 +110,86 @@ def get_call(bot_type, jsonstr):
     Does the GET request for the specific bot type and given request string
     """
     logging.info("get_call(%s, %s)" % (bot_type, jsonstr))
-    nrows = 0
-    last_update = None
-    try:
-        open_connection()
-        cur = CONN.cursor()
-        cur.execute(SQL_CNT % BOT_TYPES[bot_type])
-        nrows = cur.fetchone()[0]
-        cur.execute(SQL_GET_LATEST % BOT_TYPES[bot_type])
-        last_update = cur.fetchone()[0]
-    except Exception as sql_exception:
-        logging.exception(sql_exception)
-        # responseStatus = 503
-    finally:
-        if CONN is not None:
-            CONN.close()
 
-    jstr = {"cnt" : nrows,
-            "resource" : bot_type,
-            "lastUpdate": (last_update.isoformat() if last_update is not None else None)}
-    return jstr
+    jstr = None
+    rc = 503
+    try:
+
+        if jsonstr is None:
+            nrows = 0
+            last_update = None
+            #table = dbclient.describe_table(TableName=xxx)
+
+            jstr = {"cnt" : nrows,
+                    "resource" : bot_type,
+                    "lastUpdate": (last_update.isoformat() if last_update is not None else None)}
+            rc = 200
+    except Exception as db_exception:
+        logging.exception(db_exception)
+        jstr = { "err" : json.loads(str(db_exception)) }
+
+
+    logging.info("return string %s", json.dumps(jstr))
+    return {
+        "body": json.dumps(jstr),
+        "statusCode" : rc,
+        "headers": {
+            "Content-Type" : "application/json",
+        },
+    }
+
+
+
+
 
 
 def handle_dynabot(event, context):
     """
+    Dynamic Bot REST endpoint to DynamoDB table
+
+    Requires 'deviceid' to be present
+      primary key - combination of '{bot_type}-{deviceid}'
+      secondary key - new timestamp form at 'YYYY-MM-DD HH:mm:ss'
+    """
+    logging.info("debug: event: %s", event)
+
+    operation = event['httpMethod']
+    bot_type = event['pathParameters']['bottype']
+    data = event['queryStringParameters'] if operation == 'GET' else json.loads(event['body'])
+
+    logging.info("read the bottype: %s", bot_type)
+    logging.debug("incoming data: %s", data)
+
+    operations = {
+        'POST' : lambda jsonstr, bot_type: post_call(bot_type, jsonstr),
+        'GET' : lambda jsonstr, bot_type: get_call(bot_type, jsonstr)
+    }
+
+
+    # see if we can delegate the call
+    if (operation in operations and bot_type in BOT_TYPES):
+        return operations[operation](data, bot_type)
+
+    logging.error("unknown method(%s) or resource(%s)", operation, resource)
+
+    return {
+        "body": {"message" : "unknown method(%s) or bot_type(%s)" % (operation, bot_type)},
+        "statusCode" : 400,
+        "headers": {
+            "Content-Type" : "application/json",
+        },
+    }
+
+
+
+
+
+def handle_dynabot1(event, context):
+    """
     used for debugging
     """
-    data = event['queryStringParameters'] if operation == 'GET' else json.loads(event['body'])
-    operation = event['httpMethod']
-
-    table = dynamodb.Table(os.environ['DYNAMODB_TABLE'])
-
+    logging.info("debug: event: %s", event)
+    logging.info("debug: context: %s", context)
     return {
         "body": json.dumps(event),
         "headers": {
@@ -135,39 +197,3 @@ def handle_dynabot(event, context):
         },
     }
 
-
-
-
-def handle_bot(event, context):
-    '''  this is our handler code in the Lambda function
-    REST interface for GET and POST
-    '''
-    resource = event['path'].split('/')[-1]
-    # this is also event['pathParameter']['bottype']
-    # got a key error here
-    #logging.error("parsed %s", event['pathParameter']['bottype'])
-
-    # get the first parameter from event
-    operations = {
-        'POST' : lambda jsonstr, bot_type: post_call(bot_type, jsonstr),
-        'GET' : lambda jsonstr, bot_type: get_call(bot_type, jsonstr)
-    }
-
-    operation = event['httpMethod']
-    if (operation in operations and resource in BOT_TYPES):
-        payload = event['queryStringParameters'] if operation == 'GET' else json.loads(event['body'])
-        response_code = 200
-        body = operations[operation](payload, resource)
-#        body = { 'resource' : ("%s" % resource), 'bottype' : bot_types[resource], 'event' : json.dumps(event) }
-    else:
-        logging.error("unknown method(%s) or resource(%s)", operation, resource)
-        response_code = 503
-        body = {"message" : "unknown method(%s) or resource(%s)" % (operation, resource)}
-
-    return {
-        "statusCode": response_code,
-        "body": json.dumps(body),
-        "headers": {
-            "Content-Type" : "application/json",
-        },
-    }

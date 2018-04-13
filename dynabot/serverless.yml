@@ -2,25 +2,35 @@ service: dynabot
 
 frameworkVersion: ">=1.1.0 < 2.0.0"
 
+# used for readability
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  region: ${opt:region, self:provider.region}
+  devDynamoCapacity:
+    ReadCapacityUnits: 1
+    WriteCapacityUnits: 1
+  prodDynamoCapacity:
+    ReadCapacityUnits: 2
+    WriteCapacityUnits: 2
+  
+
 provider:
   name: aws
   runtime: python3.6
   region: us-west-2
 
   environment:
-    STAGE: "${opt:stage, self:provider.stage}"
-    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    STAGE: ${self:custom.stage}
+    DYNAMODB_TABLE: ${self:service}-${self:custom.stage}
 
   iamRoleStatements:
     - Effect: Allow
       Action:
         - dynamodb:Query
-        - dynamodb:Scan
         - dynamodb:GetItem
         - dynamodb:PutItem
         - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+      Resource: "arn:aws:dynamodb:${self:custom.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
 
 
 functions:
@@ -54,6 +64,9 @@ resources:
           -
             AttributeName: CreatedAt
             AttributeType: S
+          -
+            AttributeName: bottype
+            AttributeType: S
         KeySchema:
           -
             AttributeName: Id
@@ -61,9 +74,20 @@ resources:
           -
             AttributeName: CreatedAt
             KeyType: RANGE
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+        Tags:
+            - Key: "Created"
+              Value: "part of DynaBot SLS"
+        LocalSecondaryIndexes:
+          - IndexName: BotTypeIndex
+            KeySchema:
+              - AttributeName: Id
+                KeyType: HASH
+              - AttributeName: bottype
+                KeyType: RANGE
+            Projection: 
+              ProjectionType: KEYS_ONLY
+            
+        ProvisionedThroughput: ${self:custom.${self:custom.stage}DynamoCapacity}
         TableName: ${self:provider.environment.DYNAMODB_TABLE}
       
 #  Outputs:
