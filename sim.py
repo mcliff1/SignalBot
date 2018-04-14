@@ -352,5 +352,5 @@ BOT_ARRAY = [
 
 
 url_rds = "https://i0959l88u2.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
-url_ddb = "https://aix3s2f4w9.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
+url_ddb = "https://6chpacjxci.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
 main(bot_list=BOT_ARRAY, url=url_ddb)

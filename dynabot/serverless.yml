@@ -6,12 +6,7 @@ frameworkVersion: ">=1.1.0 < 2.0.0"
 custom:
   stage: ${opt:stage, self:provider.stage}
   region: ${opt:region, self:provider.region}
-  devDynamoCapacity:
-    ReadCapacityUnits: 1
-    WriteCapacityUnits: 1
-  prodDynamoCapacity:
-    ReadCapacityUnits: 2
-    WriteCapacityUnits: 2
+  extra: ${file(vars/${self:custom.stage}.yml)}
   
 
 provider:
@@ -21,7 +16,7 @@ provider:
 
   environment:
     STAGE: ${self:custom.stage}
-    DYNAMODB_TABLE: ${self:service}-${self:custom.stage}
+    DYNAMODB_TABLE: {Ref: DynaBotDB}
 
   iamRoleStatements:
     - Effect: Allow
@@ -30,7 +25,18 @@ provider:
         - dynamodb:GetItem
         - dynamodb:PutItem
         - dynamodb:UpdateItem
-      Resource: "arn:aws:dynamodb:${self:custom.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+#      Resource: "arn:aws:dynamodb:${self:custom.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+      Resource: 
+        "Fn::Join":
+          - ""
+          -
+            - "arn:aws:dynamodb:"
+            - Ref: "AWS::Region"
+            - ":"
+            - Ref: "AWS::AccountId"
+            - ":table/"
+            - Ref: DynaBotDB
+            - "*"
 
 
 functions:
@@ -53,42 +59,38 @@ functions:
 
 resources:
   Resources:
-    DynaBotDynamoDBTable:
+    DynaBotDB:
       Type: 'AWS::DynamoDB::Table'
       #DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
-          -
-            AttributeName: Id
+          - AttributeName: Id
             AttributeType: S
-          -
-            AttributeName: CreatedAt
+          - AttributeName: CreatedAt
             AttributeType: S
-          -
-            AttributeName: bottype
+          - AttributeName: bottype
             AttributeType: S
         KeySchema:
-          -
-            AttributeName: Id
+          - AttributeName: Id
             KeyType: HASH
-          -
-            AttributeName: CreatedAt
+          - AttributeName: CreatedAt
             KeyType: RANGE
         Tags:
-            - Key: "Created"
-              Value: "part of DynaBot SLS"
-        LocalSecondaryIndexes:
+          - Key: "Created"
+            Value: "part of DynaBot SLS"
+        ProvisionedThroughput: ${self:custom.extra.DynamoCapacity}
+        GlobalSecondaryIndexes:
           - IndexName: BotTypeIndex
             KeySchema:
-              - AttributeName: Id
-                KeyType: HASH
               - AttributeName: bottype
+                KeyType: HASH
+              - AttributeName: CreatedAt
                 KeyType: RANGE
             Projection: 
-              ProjectionType: KEYS_ONLY
-            
-        ProvisionedThroughput: ${self:custom.${self:custom.stage}DynamoCapacity}
-        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+              NonKeyAttributes:
+                - "bottype"
+              ProjectionType: "INCLUDE"
+            ProvisionedThroughput: ${self:custom.extra.DynamoCapacity}
       
 #  Outputs:
 #     NewOutput:

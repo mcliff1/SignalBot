@@ -18,7 +18,10 @@ import json
 import logging
 from decimal import Decimal
 
+
 import boto3
+from boto3.dynamodb.conditions import Key, Attr
+
 dynamodb = boto3.resource('dynamodb')
 db_table = dynamodb.Table(os.environ['DYNAMODB_TABLE'])
 
@@ -116,13 +119,12 @@ def get_call(bot_type, jsonstr):
     try:
 
         if jsonstr is None:
-            nrows = 0
-            last_update = None
-            #table = dbclient.describe_table(TableName=xxx)
-
-            jstr = {"cnt" : nrows,
+            nrow = db_table.query(IndexName="BotTypeIndex", Select="COUNT", KeyConditionExpression=Key('bottype').eq(bot_type))['Count']
+            rslt = db_table.query(IndexName="BotTypeIndex", ScanIndexForward=False, Limit=1, KeyConditionExpression=Key('bottype').eq(bot_type))['Items']
+           
+            jstr = {"cnt" : nrow,
                     "resource" : bot_type,
-                    "lastUpdate": (last_update.isoformat() if last_update is not None else None)}
+                    "lastUpdate": (rslt[0]['CreatedAt'] if len(rslt) > 0 else None)}
             rc = 200
     except Exception as db_exception:
         logging.exception(db_exception)
