@@ -331,26 +331,27 @@ def main(bot_list, url):
         time.sleep(sleep_time)
 
 
+if __name__ == '__main__':
+    """  run this if we are called as the primary module
+    """
 
+    # make an array of these bots
+    BOT_ARRAY = [
+        SoilBot('1200aaaaffff0021'),
+        SoilBot('1300aaaaffff0031'),
+        SoilBot('1500aaaaffff0051', volts=3.4),
+        SoilBot('1600aaaaffff0061', battery=60),
+        SoilBot('2000bbaaffff0002', tempf=90),
+        SoilBot('3000ccaaffff0003', soilmoisture1=2100, soilmoisture2=2000),
+        CureBot('4000ccaacccc0004', tempf=32),
+        AquaBot('5000ccaaaaaa0005'),
+        AquaBot('5100bbaaaaaa0015'),
+        LightBot('6000bbaa11110006'),
+        LightBot('6100bbaa11110016'),
+        LightBot('6200bbaa11110026'),
+        GasBot('7000bbaagggg0007'),
+    ]
 
-# make an array of these bots
-BOT_ARRAY = [
-    SoilBot('1200aaaaffff0021'),
-    SoilBot('1300aaaaffff0031'),
-    SoilBot('1500aaaaffff0051', volts=3.4),
-    SoilBot('1600aaaaffff0061', battery=60),
-    SoilBot('2000bbaaffff0002', tempf=90),
-    SoilBot('3000ccaaffff0003', soilmoisture1=2100, soilmoisture2=2000),
-    CureBot('4000ccaacccc0004', tempf=32),
-    AquaBot('5000ccaaaaaa0005'),
-    AquaBot('5100bbaaaaaa0015'),
-    LightBot('6000bbaa11110006'),
-    LightBot('6100bbaa11110016'),
-    LightBot('6200bbaa11110026'),
-    GasBot('7000bbaagggg0007'),
-]
-
-
-url_rds = "https://i0959l88u2.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
-url_ddb = "https://6chpacjxci.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
-main(bot_list=BOT_ARRAY, url=url_ddb)
+    url_rds = "https://i0959l88u2.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
+    url_ddb = "https://6chpacjxci.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
+    main(bot_list=BOT_ARRAY, url=url_ddb)

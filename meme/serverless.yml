@@ -1,0 +1,92 @@
+service: meme
+
+frameworkVersion: ">=1.1.0 < 2.0.0"
+
+# used for readability
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  region: ${opt:region, self:provider.region}
+  extra: ${file(vars/${self:custom.stage}.yml)}
+  
+
+provider:
+  name: aws
+  runtime: python3.6
+  region: us-west-2
+
+  environment:
+    STAGE: ${self:custom.stage}
+    DYNAMODB_TABLE: {Ref: MemeDB}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+      Resource: 
+        "Fn::Join":
+          - ""
+          -
+            - "arn:aws:dynamodb:"
+            - Ref: "AWS::Region"
+            - ":"
+            - Ref: "AWS::AccountId"
+            - ":table/"
+            - Ref: MemeDB
+            - "*"
+
+
+functions:
+  memegen:
+    handler: handler.lambda_handler
+    tags:
+      created: serverless for memegen
+
+    events:
+      - http:
+          path: /
+          method: get
+          cors: true
+
+
+
+resources:
+  Resources:
+    MemeDB:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: Id
+            AttributeType: S
+          - AttributeName: CreatedAt
+            AttributeType: S
+          - AttributeName: bottype
+            AttributeType: S
+        KeySchema:
+          - AttributeName: Id
+            KeyType: HASH
+          - AttributeName: CreatedAt
+            KeyType: RANGE
+        Tags:
+          - Key: "Created"
+            Value: "part of Meme SLS"
+        ProvisionedThroughput: ${self:custom.extra.DynamoCapacity}
+        GlobalSecondaryIndexes:
+          - IndexName: BotTypeIndex
+            KeySchema:
+              - AttributeName: bottype
+                KeyType: HASH
+              - AttributeName: CreatedAt
+                KeyType: RANGE
+            Projection: 
+              NonKeyAttributes:
+                - "bottype"
+              ProjectionType: "INCLUDE"
+            ProvisionedThroughput: ${self:custom.extra.DynamoCapacity}
+      
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
