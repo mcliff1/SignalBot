@@ -3,7 +3,7 @@ Project contains `serverless.yml` file for RESTful interface to receive JSON for
 
 The design approach is to leverage serverless technology, and template as much as possible for easy duplication. The current architecture is using a **PostgreSQL** backend database, but we expect to leverage **DynamoDB** as an alternative for a more scalable design.
 
-In addition there is a *sim.py* file which contains a python object model to simululation the *sensor bots*.
+In addition there is a *SimBot/sim.py* file which contains a simulator and *SimBot/simbot* python package folder to simululation the *sensor bots*.
 
 ## Architecture
 This is going to leverage the AWS cloud and Serverless stack.
@@ -28,6 +28,7 @@ For Serverless workstation
 
 * need to make the VPC subnet's dynamic or variable
 * better define the GET operation (allow parameters to get data to plot)
+* cloudformation or serverless project to create the postgres DB
 
 ## DB Tool
 
