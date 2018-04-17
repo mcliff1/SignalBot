@@ -9,6 +9,9 @@
 
 sudo yum -y install git docker tmux jq
 
+# install pip
+curl https://bootstrap.pypa.io/get-pip.py | sudo /usr/bin/python2.7
+
 # ensures we install 
 curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -
 sudo yum -y install nodejs
