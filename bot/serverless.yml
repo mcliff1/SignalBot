@@ -1,5 +1,8 @@
 service: bot
 
+custom:
+  stage: ${opt:stage, self:provider.stage}
+
 provider:
   name: aws
   runtime: python3.6
@@ -41,7 +44,6 @@ provider:
 # you can add packaging information here
 package:
   include:
-#    - include-me.py
     - psycopg2/**
 
 functions:
@@ -63,13 +65,34 @@ functions:
 
 
 # you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
+resources:
+  Resources:
+    S3BackStore:
+      Type: "AWS::S3::Bucket"
+
+    #https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html
+    RDBMS:
+      Type: "AWS::RDS::DBInstance"
+      Properties:
+        AllocatedStorage: 5
+        DBInstanceClass: "db.t2.micro"
+        Engine: "postgres"
+        EngineVersion: 9.5
+        MasterUsername: "dbuser"
+        MasterUserPassword: "dbpassword"
+        Tags:
+          - Key: "Name"
+            Value: "bot RDS database"
+          - Key: "Role"
+            Value: "Stage - ${self:custom.stage}"
+
+  
+
 #  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
+#     RDBMSId:
+#       Description: "Instance id of newly created database"
+#       Value: "Ref" : "RDBMS"
+#     RDBMSAddress:
+#       Description: "Endpoint Address of newly created database"
+#       Value: "Fn::GetAtt" : [ "RDBMS", "Endpoint.Port" ]
+

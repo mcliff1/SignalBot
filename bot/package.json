@@ -1,0 +1,13 @@
+{
+  "name": "bot",
+  "version": "1.0.0",
+  "description": "RESTful Service for SignalBot devices",
+  "main": "",
+  "scripts": {
+    "test": "echo \"Error: no test here sorry\" && exit 1",
+    "lint": "standard",
+    "fixStyle": "standard --fix",
+    "buildRDBMS": "./resources/create-db-instance.sh"
+  },
+  "author": "Matt Cliff"
+}

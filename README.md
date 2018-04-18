@@ -24,6 +24,12 @@ For Serverless workstation
   
   parameters for the PostGre SQL database string to connect too
 
+### bot
+
+this module will build a postgres RDS database to back end the REST API
+
+need to run shell script to set up database initially after load (this requires docker)
+
 ### TODO
 
 * need to make the VPC subnet's dynamic or variable

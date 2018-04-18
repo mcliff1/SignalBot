@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
   python Signal Bot class object
   author: Matt Cliff
