@@ -1,0 +1,61 @@
+service: bot-dbclient
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+
+# import the VPC Id
+# Import the DB Id
+
+# TODO - need to pull the  vpc id and subnet groups out
+#   they need to be whatever the RDBMS is in
+
+provider:
+  name: aws
+  runtime: python3.6
+
+# you can add statements to the Lambda function's IAM Role here
+#  iamRoleStatements:
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:ListBucket"
+#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:PutObject"
+#      Resource:
+#        Fn::Join:
+#          - ""
+#          - - "arn:aws:s3:::"
+#            - "Ref" : "ServerlessDeploymentBucket"
+#            - "/*"
+
+# ideally this part would import as JSON from some AWS CLI command to see where our DB is running
+# in the mean time, these need to match
+# you can add packaging information here
+
+
+# you can add CloudFormation resource templates here
+# https://github.com/mugglmenzel/serverless-examples-cached-rds-ws/blob/master/serverless.yml
+resources:
+  Resources:
+#    BotStorageSecurityGroup:
+#      Type: AWS::EC2::SecurityGroup
+#      Properties:
+#        GroupDescription: "RDS Bot Storage Security Group"
+#        VpcId:
+#          Ref: BotVPC
+
+
+    S3BackStore:
+      Type: "AWS::S3::Bucket"
+
+  
+
+#  Outputs:
+#     RDBMSId:
+#       Description: "Instance id of newly created database"
+#       Value: "Ref" : "RDBMS"
+#     RDBMSAddress:
+#       Description: "Endpoint Address of newly created database"
+#       Value: "Fn::GetAtt" : [ "RDBMS", "Endpoint.Port" ]
+

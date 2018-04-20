@@ -1,0 +1,84 @@
+{ "AWSTemplateFormatVersion" : "2010-09-09",
+  "Parameters" :
+{
+    "myKeyPair" : {
+	"Description" : "Amazon EC2 Key Pair", 
+	"Type" : "AWS::EC2::KeyPair::KeyName"
+    },
+    "myDomain" : {
+	"Description" : "Optional Domain Name to add DNS record",
+	"Type" : "String",
+        "Default" : "nodomainname"
+    },
+    "stage" : {
+	"Description" : "Deployment Stage (dev or prod)",
+	"Type" : "String",
+        "Default" : "dev",
+        "AllowedValues" : [ "dev", "prod" ]
+    }
+},
+  "Resources" :
+{
+    "EC2Instance": {
+        "Type" : "AWS::EC2::Instance",
+        "Properties" : {
+                "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
+                "KeyName" : { "Ref" : "myKeyPair" },
+                "InstanceType" : "t2.micro",
+                "Tags" : [ 
+                    { "Key" : "Name", "Value" : "Bot Service RDS EC2 Workstation" },
+                    { "Key" : "Role", "Value" : "Stage - ${stage}" }
+                ],
+                "SubnetId" : { "Fn::ImportValue" : {"Fn::Sub" : "bot-${stage}-SubnetId" }},
+                "UserData" : { "Fn::Base64" : { "Fn::Join" : ["",[
+                        "#!/bin/bash", "\n",
+                        "echo ", { "Fn::ImportValue" : "bot-dev-RDBMSAddress" }, " > /dbname.log",  "\n",
+                        "date > bootstrap.log", "\n"]]}
+                }
+        }
+     },
+
+    "InternetGateway": {
+        "Type" : "AWS::EC2::InternetGateway",
+        "Properties" : {
+                "Tags" : [ 
+                    { "Key" : "Name", "Value" : "Bot Service RDS EC2 Workstation" },
+                    { "Key" : "Role", "Value" : "Stage - ${stage}" }
+                ]
+        }
+    },
+
+
+    "IGA": {
+        "Type" : "AWS::EC2::VPCGatewayAttachment",
+        "Properties" : {
+                "InternetGatewayId" : { "Ref" : "InternetGateway" },
+                "VpcId" : { "Fn::ImportValue" : {"Fn::Sub" : "bot-${stage}-VpcId" }}
+        }
+    }
+},
+  "Mappings" :
+{
+    "AWSRegionArch2AMI" : {
+      "us-east-1"        : {"HVM64" : "ami-97785bed"},
+      "us-west-2"        : {"HVM64" : "ami-f2d3638a"},
+      "us-west-1"        : {"HVM64" : "ami-824c4ee2"},
+      "eu-west-1"        : {"HVM64" : "ami-d834aba1"},
+      "eu-west-2"        : {"HVM64" : "ami-403e2524"},
+      "eu-west-3"        : {"HVM64" : "ami-8ee056f3"},
+      "eu-central-1"     : {"HVM64" : "ami-5652ce39"},
+      "ap-northeast-1"   : {"HVM64" : "ami-ceafcba8"},
+      "ap-northeast-2"   : {"HVM64" : "ami-863090e8"},
+      "ap-northeast-3"   : {"HVM64" : "ami-83444afe"},
+      "ap-southeast-1"   : {"HVM64" : "ami-68097514"},
+      "ap-southeast-2"   : {"HVM64" : "ami-942dd1f6"},
+      "ap-south-1"       : {"HVM64" : "ami-531a4c3c"},
+      "us-east-2"        : {"HVM64" : "ami-f63b1193"},
+      "ca-central-1"     : {"HVM64" : "ami-a954d1cd"},
+      "sa-east-1"        : {"HVM64" : "ami-84175ae8"},
+      "cn-north-1"       : {"HVM64" : "ami-cb19c4a6"},
+      "cn-northwest-1"   : {"HVM64" : "ami-3e60745c"}
+    }
+}
+
+}

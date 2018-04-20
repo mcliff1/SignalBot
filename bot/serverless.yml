@@ -2,11 +2,14 @@ service: bot
 
 custom:
   stage: ${opt:stage, self:provider.stage}
+  region: ${opt:region, self:provider.region}
+
+# TODO - need to pull the  vpc id and subnet groups out
+#   they need to be whatever the RDBMS is in
 
 provider:
   name: aws
   runtime: python3.6
-  region: us-west-2
 
 # you can add statements to the Lambda function's IAM Role here
 #  iamRoleStatements:
@@ -26,7 +29,8 @@ provider:
 
 # you can define service wide environment variables here
   environment:
-    RDS_HOST: db.host.com
+    RDS_HOST: 
+        "Fn::GetAtt" : [ RDBMS, Endpoint.Address ]
     RDS_DBNAME: dbname
     RDS_USERNAME: username
     RDS_PASSWORD: password
@@ -35,11 +39,11 @@ provider:
 # in the mean time, these need to match
   vpc:
     securityGroupIds:
-      - sg-0ccfdaa19e7e112da
+      - "Ref" : BotStorageSecurityGroup
     subnetIds:
-      - subnet-e7fae9bc
-      - subnet-abbde3cd
-      - subnet-caa4da82
+      - "Ref" : BotSubnetA
+      - "Ref" : BotSubnetB
+      - "Ref" : BotSubnetC
 
 # you can add packaging information here
 package:
@@ -65,14 +69,76 @@ functions:
 
 
 # you can add CloudFormation resource templates here
+# https://github.com/mugglmenzel/serverless-examples-cached-rds-ws/blob/master/serverless.yml
 resources:
   Resources:
+    BotVPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: "172.12.0.0/16"
+        Tags:
+          - Key: "Name"
+            Value: "${self:service}"
+    
+    BotSubnetA:
+      DependsOn: BotVPC
+      Type: AWS::EC2::Subnet
+
+      Properties:
+        VpcId: 
+          Ref: BotVPC
+        AvailabilityZone: ${self:custom.region}a
+        CidrBlock: "172.12.0.0/24"
+
+    BotSubnetB:
+      DependsOn: BotVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: 
+          Ref: BotVPC
+        AvailabilityZone: ${self:custom.region}b
+        CidrBlock: "172.12.1.0/24"
+
+    BotSubnetC:
+      DependsOn: BotVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: 
+          Ref: BotVPC
+        AvailabilityZone: ${self:custom.region}c
+        CidrBlock: "172.12.2.0/24"
+
+    BotDBSubnetGroup: 
+      Type: AWS::RDS::DBSubnetGroup
+      Properties:
+        DBSubnetGroupDescription: "RDS Bot Subnet Group"
+        SubnetIds: 
+        - Ref: BotSubnetA
+        - Ref: BotSubnetB
+        - Ref: BotSubnetC
+
+    BotStorageSecurityGroup:
+      DependsOn: BotVPC
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: "RDS Bot Storage Security Group"
+        VpcId:
+          Ref: BotVPC
+        Tags:
+          - Key: "Name"
+            Value: "${self:service}"
+
+
     S3BackStore:
       Type: "AWS::S3::Bucket"
+      Properties:
+        Tags:
+          - Key: "Name"
+            Value: "${self:service}"
 
     #https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html
     RDBMS:
-      Type: "AWS::RDS::DBInstance"
+      Type: AWS::RDS::DBInstance
       Properties:
         AllocatedStorage: 5
         DBInstanceClass: "db.t2.micro"
@@ -80,19 +146,45 @@ resources:
         EngineVersion: 9.5
         MasterUsername: "dbuser"
         MasterUserPassword: "dbpassword"
+        VPCSecurityGroups:
+          - "Fn::GetAtt": BotStorageSecurityGroup.GroupId
+        DBSubnetGroupName:
+          Ref: BotDBSubnetGroup
+        PubliclyAccessible: False
         Tags:
           - Key: "Name"
-            Value: "bot RDS database"
-          - Key: "Role"
+            Value: "${self:service} RDS database"
+          - Key: "Stage"
             Value: "Stage - ${self:custom.stage}"
 
   
 
-#  Outputs:
-#     RDBMSId:
-#       Description: "Instance id of newly created database"
-#       Value: "Ref" : "RDBMS"
-#     RDBMSAddress:
-#       Description: "Endpoint Address of newly created database"
-#       Value: "Fn::GetAtt" : [ "RDBMS", "Endpoint.Port" ]
+  Outputs:
+     VpcId:
+       Description: "VPC that the instance in"
+       Value: 
+           Ref : BotVPC
+       Export: 
+           Name: "${self:service}-${self:custom.stage}-VpcId"
+     SubnetId:
+       Description: "Subnet ID that an EC2 instance can use to connect to DBMS"
+       Value: 
+           Ref : BotSubnetA
+       Export: 
+           Name: "${self:service}-${self:custom.stage}-SubnetId"
+     RDBMSId:
+       Description: "Instance id of newly created database"
+       Value: 
+           Ref : RDBMS
+       Export: 
+           #Name: { "Fn::Join" : [ ":", [ { "Ref", "AWS::StackName" }, "RDBMSId" ] ] }
+           Name: "${self:service}-${self:custom.stage}-RDBMSName"
+           #Name: !Join [ ":", [ !Ref "AWS::StackName", "RDBMSId" ] ]
+     RDBMSAddress:
+       Description: "Endpoint Address of newly created database"
+       Value: 
+           "Fn::GetAtt" : [ "RDBMS", "Endpoint.Address" ]
+       Export: 
+           Name: "${self:service}-${self:custom.stage}-RDBMSAddress"
+           #Name: { "Fn::Join" : [ ":", [ { "Ref", "AWS::StackName" }, "RDBMSAddress" ] ] }
 
