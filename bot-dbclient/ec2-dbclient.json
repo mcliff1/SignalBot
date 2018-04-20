@@ -1,4 +1,5 @@
 { "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Creates a EC2 instance that is publicly accessible that can interact with our RDS database. TODO  install that docker tool or Postgre Client directly ? I could set the IG on a subnet instead of the VPC",
   "Parameters" :
 {
     "myKeyPair" : {
@@ -17,26 +18,98 @@
         "AllowedValues" : [ "dev", "prod" ]
     }
 },
+  "Conditions" :
+{
+    "CreateDnsResources" : { "Fn::Not" : [{ "Fn::Equals" : [{"Ref" : "myDomain"}, "nodomainname"] }] }
+},
   "Resources" :
 {
     "EC2Instance": {
         "Type" : "AWS::EC2::Instance",
+        "DependsOn" : "PublicRoute",
         "Properties" : {
                 "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
-                "KeyName" : { "Ref" : "myKeyPair" },
                 "InstanceType" : "t2.micro",
+                "KeyName" : { "Ref" : "myKeyPair" },
+                "NetworkInterfaces" : [{ 
+			"DeviceIndex" : "0" ,
+			"GroupSet" : [ { "Ref" : "BotSecurity" } ],
+			"SubnetId" : { "Ref" : "BotSubnetPublic" },
+			"AssociatePublicIpAddress" : "true"
+                }],
                 "Tags" : [ 
                     { "Key" : "Name", "Value" : "Bot Service RDS EC2 Workstation" },
                     { "Key" : "Role", "Value" : "Stage - ${stage}" }
                 ],
-                "SubnetId" : { "Fn::ImportValue" : {"Fn::Sub" : "bot-${stage}-SubnetId" }},
                 "UserData" : { "Fn::Base64" : { "Fn::Join" : ["",[
                         "#!/bin/bash", "\n",
+                        "yum update -y",  "\n",
+                        "yum install -y tmux git jq",  "\n",
                         "echo ", { "Fn::ImportValue" : "bot-dev-RDBMSAddress" }, " > /dbname.log",  "\n",
                         "date > bootstrap.log", "\n"]]}
                 }
         }
      },
+
+
+    "BotSecurity": {
+        "Type" : "AWS::EC2::SecurityGroup",
+        "Properties" : {
+                "GroupDescription": "Allows SSH and opens the postgresql port to the instance",
+                "VpcId" : { "Fn::ImportValue" : {"Fn::Sub" : "bot-${stage}-VpcId" }},
+                "SecurityGroupIngress" : [
+			{ "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" },
+			{ "IpProtocol" : "tcp", "FromPort" : "5432", "ToPort" : "5432", "CidrIp" : "0.0.0.0/0" }
+		],
+                "Tags" : [ 
+                    { "Key" : "Name", "Value" : "Bot Service RDS EC2 Workstation" },
+                    { "Key" : "Role", "Value" : "Stage - ${stage}" }
+                ]
+        }
+     },
+
+    "RTA": {
+        "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties" : {
+                "SubnetId" : { "Ref" : "BotSubnetPublic" },
+                "RouteTableId" : { "Ref" : "PublicRouteTable" }
+        }
+    },
+
+    "PublicRouteTable": {
+        "Type" : "AWS::EC2::RouteTable",
+        "Properties" : {
+                "VpcId" : { "Fn::ImportValue" : {"Fn::Sub" : "bot-${stage}-VpcId" }},
+                "Tags" : [ 
+                    { "Key" : "Name", "Value" : "Bot Service RDS EC2 Workstation" },
+                    { "Key" : "Role", "Value" : "Stage - ${stage}" }
+                ]
+        }
+    },
+
+    "PublicRoute": {
+        "Type" : "AWS::EC2::Route",
+        "DependsOn" : "IGA",
+        "Properties" : {
+                "DestinationCidrBlock" : "0.0.0.0/0",
+                "RouteTableId" : { "Ref" : "PublicRouteTable" },
+                "GatewayId" : { "Ref" : "InternetGateway" }
+        }
+    },
+
+    "BotSubnetPublic": {
+        "Type" : "AWS::EC2::Subnet",
+        "Properties" : {
+                "VpcId" : { "Fn::ImportValue" : {"Fn::Sub" : "bot-${stage}-VpcId" }},
+                "MapPublicIpOnLaunch" : "true",
+                "CidrBlock" : "172.12.101.0/24",
+                "Tags" : [ 
+                    { "Key" : "Name", "Value" : "Bot Service RDS EC2 Workstation" },
+                    { "Key" : "Role", "Value" : "Stage - ${stage}" }
+                ]
+        }
+
+    },
 
     "InternetGateway": {
         "Type" : "AWS::EC2::InternetGateway",
@@ -54,6 +127,23 @@
         "Properties" : {
                 "InternetGatewayId" : { "Ref" : "InternetGateway" },
                 "VpcId" : { "Fn::ImportValue" : {"Fn::Sub" : "bot-${stage}-VpcId" }}
+        }
+    },
+
+
+
+    "DnsRecord": {
+        "Type" : "AWS::Route53::RecordSet",
+        "Condition" : "CreateDnsResources",
+        "Properties" : {
+                "Comment" : "DB workstation instance to support bot RDS",
+                "Type" : "A",
+                "TTL" : "900",
+                "HostedZoneName" : { "Fn::Join" : [ "", [ {"Ref" : "myDomain"}, "."]]},
+                "Name" : { "Fn::Join" : [ "", [ "bot-", {"Ref" : "stage" }, "." , {"Ref" : "myDomain"}, "."]]},
+                "ResourceRecords" : [
+                	{"Fn::GetAtt" : [ "EC2Instance", "PublicIp"] }
+                ]
         }
     }
 },
