@@ -12,7 +12,7 @@ custom:
 provider:
   name: aws
   runtime: python3.6
-  region: us-west-2
+  region: us-west-2   # keep this for now, but remove it before we wrap up
 
   environment:
     STAGE: ${self:custom.stage}
@@ -25,7 +25,6 @@ provider:
         - dynamodb:GetItem
         - dynamodb:PutItem
         - dynamodb:UpdateItem
-#      Resource: "arn:aws:dynamodb:${self:custom.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
       Resource: 
         "Fn::Join":
           - ""
@@ -44,6 +43,7 @@ functions:
     handler: handler.handle_dynabot
     tags:
       created: serverless for dynabot
+      Name: Dynabot Primary Lambda Function
 
     events:
       - http:
@@ -78,6 +78,8 @@ resources:
         Tags:
           - Key: "Created"
             Value: "part of DynaBot SLS"
+          - Key: "Name"
+            Value: "Dynabot Serverless DB"
         ProvisionedThroughput: ${self:custom.extra.DynamoCapacity}
         GlobalSecondaryIndexes:
           - IndexName: BotTypeIndex
@@ -92,7 +94,11 @@ resources:
               ProjectionType: "INCLUDE"
             ProvisionedThroughput: ${self:custom.extra.DynamoCapacity}
       
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
+  Outputs:
+    SLSServiceEndpoint:
+      Description: "URL Endpoint for the REST Service"
+      Value: ${self:functions.dynabot.handler}
+    SLSServiceEndpoint2:
+      Description: "URL Endpoint for the REST Service"
+      Value: {Ref: ApiGatewayRestApi}
+

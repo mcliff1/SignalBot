@@ -142,6 +142,10 @@ def get_call(bot_type, jsonstr):
 
 
 
+def handle_getall(event, context):
+    """
+    REST API to return all of the data
+    """
 
 
 

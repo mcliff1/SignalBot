@@ -1,7 +1,7 @@
 # SignalBot -  Serverless
 Project contains `serverless.yml` file for RESTful interface to receive JSON formated data from multiple types of *sensor bots*.
 
-The design approach is to leverage serverless technology, and template as much as possible for easy duplication. The current architecture is using a **PostgreSQL** backend database, but we expect to leverage **DynamoDB** as an alternative for a more scalable design.
+The design approach is to leverage serverless technology, and template as much as possible for easy duplication. The current architecture is using a **PostgreSQL** backend database, we also include a **DynamoDB** alternative for a more scalable design.
 
 In addition there is a *SimBot/sim.py* file which contains a simulator and *SimBot/simbot* python package folder to simululation the *sensor bots*.
 
@@ -17,7 +17,10 @@ For Serverless workstation
 * create an IAM user account with a Key for access to CLI (would be nice to do this with a server role, but the serverless framework uses the API Key) 
 * `sls config credentials --provider aws --key <publickey> --secret <privatekey>`
 * in the *SignalBot/bot* directory run `sls info` (or `sls deploy`)
-  
+ 
+
+OR you can use this [cloud formation template](https://github.com/mcliff1/aws/blob/master/cfn-ec2workstation.json)
+ 
   start with
 >  /api/metrics/soil 
 >  {"beg":"beg","deviceid":"3c003e000247353137323334","soilmoisture1":"3308","soilmoisture2":"3498","soilmoisture3":"1","humidity":"16.9000","tempc":"22.0000","tempf":"71.6000","volts":"4.2250","battery":"104.9375"}
