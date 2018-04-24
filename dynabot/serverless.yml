@@ -95,10 +95,19 @@ resources:
             ProvisionedThroughput: ${self:custom.extra.DynamoCapacity}
       
   Outputs:
-    SLSServiceEndpoint:
+    ExportServiceEndpoint2:
       Description: "URL Endpoint for the REST Service"
-      Value: ${self:functions.dynabot.handler}
-    SLSServiceEndpoint2:
-      Description: "URL Endpoint for the REST Service"
-      Value: {Ref: ApiGatewayRestApi}
+      #Value: {"Fn::Join:", ["", [ "https://", {"Ref": "ApiGatewayRestApi"}, ".execute-api.", "us-west-2", ".amazonaws.com/", "dev"]]}
+      Value: 
+        "Fn::Join":
+          - ""
+          -
+            - "https://"
+            - Ref: "ApiGatewayRestApi"
+            - ".execute-api."
+            - Ref: "AWS::Region"
+            - ".amazonaws.com/"
+            - ${self:custom.stage}
+      Export:
+        Name: SLSServiceEndpoint
 

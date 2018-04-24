@@ -27,11 +27,49 @@ OR you can use this [cloud formation template](https://github.com/mcliff1/aws/bl
   
   parameters for the PostGre SQL database string to connect too
 
-### bot
+### bot REST API
 
 this module will build a postgres RDS database to back end the REST API
 
 need to run shell script to set up database initially after load (this requires docker)
+
+**Bot Metrics**
+----
+ <_Additional info about the call. _>
+
+**URL** <_The request type_> `GET` 
+
+**URL Params**
+**Required (or startdate or enddate)** `deviceid=[string]`
+**Required (or deviceid or enddate)** `startdate=[string]`
+**Required (or startdate or deviceid)** `enddate=[string]`
+**Optional** `CreatedAt="YYYY-MM-DD HH:MM:SS"`
+
+< _example request_ >
+
+
+
+
+
+**URL** <_The request type_> `POST` 
+
+
+**Data Param**
+
+< _what is required for a post_ >
+
+**Success Response**
+
+* **Code:** 200 <br />
+  **Content:** `{ error: "db error" }`
+
+
+**Error Response**
+
+* **Code:** 510 <br />
+  **Content:** `{ error: "db error" }`
+
+
 
 ### TODO
 

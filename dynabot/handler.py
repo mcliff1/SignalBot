@@ -54,14 +54,8 @@ def decode_json(dct):
 
 
 
-# this will be a mapping to tables? (or will everything be in a single table???)
-BOT_TYPES = {
-    'soil' : 'soil_bot',
-    'cure' : 'cure_bot',
-    'aqua' : 'aqua_bot',
-    'gas' : 'gas_bot',
-    'light' : 'light_bot',
-}
+# these are all we support
+BOT_TYPES = [ 'soil', 'cure', 'aqua', 'gas', 'light' ]
 
 
 
@@ -126,9 +120,13 @@ def get_call(bot_type, jsonstr):
                     "resource" : bot_type,
                     "lastUpdate": (rslt[0]['CreatedAt'] if len(rslt) > 0 else None)}
             rc = 200
+        else:
+            jstr = {"todo" : "retrun stuff associated with param", 
+                    "param" : jsonstr['botid'] }
+
     except Exception as db_exception:
         logging.exception(db_exception)
-        jstr = { "err" : json.loads(str(db_exception)) }
+        jstr = { "err" : str(db_exception) }
 
 
     logging.info("return string %s", json.dumps(jstr))
@@ -142,13 +140,6 @@ def get_call(bot_type, jsonstr):
 
 
 
-def handle_getall(event, context):
-    """
-    REST API to return all of the data
-    """
-
-
-
 def handle_dynabot(event, context):
     """
     Dynamic Bot REST endpoint to DynamoDB table
@@ -159,9 +150,11 @@ def handle_dynabot(event, context):
     """
     logging.info("debug: event: %s", event)
 
+    
     operation = event['httpMethod']
-    bot_type = event['pathParameters']['bottype']
     data = event['queryStringParameters'] if operation == 'GET' else json.loads(event['body'])
+
+    bot_type = event['pathParameters']['bottype']
 
     logging.info("read the bottype: %s", bot_type)
     logging.debug("incoming data: %s", data)
