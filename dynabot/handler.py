@@ -132,7 +132,7 @@ def get_call(bot_type, jsonstr):
             rslt = db_table.query(KeyConditionExpression=Key('Id').eq(bot_type + '-' + jsonstr['deviceid']))['Items']
 
             # this is a list of JSON objects,  do I just return them direct??
-            #logging.info(rslt)
+            logging.info(len(rslt))
          
             jstr = rslt
             rc = 200
