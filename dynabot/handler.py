@@ -22,6 +22,15 @@ from decimal import Decimal
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return float(o)
+        return super(DecimalEncoder, self).default(o)
+
+
+
 dynamodb = boto3.resource('dynamodb')
 db_table = dynamodb.Table(os.environ['DYNAMODB_TABLE'])
 
@@ -138,7 +147,7 @@ def get_call(bot_type, jsonstr):
             rc = 200
         else:
             jstr = {"msg" : "invalid request parameters", 
-                    "data" : jsonstr }
+                    "data" : json.dumps(jsonstr, cls=DecimalEncoder) }
             rc = 400
 
     except Exception as db_exception:
@@ -146,9 +155,9 @@ def get_call(bot_type, jsonstr):
         jstr = { "err" : str(db_exception) }
 
 
-    logging.info("return string %s", json.dumps(jstr))
+    logging.info("return string %s", jstr)
     return {
-        "body": json.dumps(jstr),
+        "body": json.dumps(jstr, cls=DecimalEncoder),
         "statusCode" : rc,
         "headers": {
             "Content-Type" : "application/json",
