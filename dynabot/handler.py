@@ -113,16 +113,33 @@ def get_call(bot_type, jsonstr):
     try:
 
         if jsonstr is None:
+            """
+            No Parameters - Query most recent row in table matching this bot_type
+            """
             nrow = db_table.query(IndexName="BotTypeIndex", Select="COUNT", KeyConditionExpression=Key('bottype').eq(bot_type))['Count']
             rslt = db_table.query(IndexName="BotTypeIndex", ScanIndexForward=False, Limit=1, KeyConditionExpression=Key('bottype').eq(bot_type))['Items']
            
-            jstr = {"cnt" : nrow,
-                    "resource" : bot_type,
-                    "lastUpdate": (rslt[0]['CreatedAt'] if len(rslt) > 0 else None)}
+            jstr = {"count" : nrow,
+                    "bottype" : bot_type,
+                    "Id": (rslt[0]['Id'] if len(rslt) > 0 else None),
+                    "CreatedAt": (rslt[0]['CreatedAt'] if len(rslt) > 0 else None)}
+            rc = 200
+
+        elif 'deviceid' in jsonstr.keys():
+            """
+            Return data for this bot
+            """
+            rslt = db_table.query(KeyConditionExpression=Key('Id').eq(bot_type + '-' + jsonstr['deviceid']))['Items']
+
+            # this is a list of JSON objects,  do I just return them direct??
+            #logging.info(rslt)
+         
+            jstr = rslt
             rc = 200
         else:
-            jstr = {"todo" : "retrun stuff associated with param", 
-                    "param" : jsonstr['botid'] }
+            jstr = {"msg" : "invalid request parameters", 
+                    "data" : jsonstr }
+            rc = 400
 
     except Exception as db_exception:
         logging.exception(db_exception)
