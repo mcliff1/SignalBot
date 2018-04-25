@@ -27,35 +27,61 @@ OR you can use this [cloud formation template](https://github.com/mcliff1/aws/bl
   
   parameters for the PostGre SQL database string to connect too
 
-### bot REST API
-
 this module will build a postgres RDS database to back end the REST API
 
 need to run shell script to set up database initially after load (this requires docker)
 
-**Bot Metrics**
+**Bot REST API**
 ----
+
+## call GET
+
  <_Additional info about the call. _>
 
-**URL** <_The request type_> `GET` 
+**URI** `GET /api/metrics/<bottype>`
 
-**URL Params**
-**Required (or startdate or enddate)** `deviceid=[string]`
-**Required (or deviceid or enddate)** `startdate=[string]`
-**Required (or startdate or deviceid)** `enddate=[string]`
-**Optional** `CreatedAt="YYYY-MM-DD HH:MM:SS"`
+**Params**
+* **Required (or startdate or enddate)** `deviceid=[string]`
+* **Required (or deviceid or enddate)** `startdate=[string]`
+* **Required (or startdate or deviceid)** `enddate=[string]`
+* **Optional** `CreatedAt="YYYY-MM-DD.HH:MM:SS"` (or partial)
 
 < _example request_ >
+_GET /api/metrics/soilbot_
+
+_GET /api/metrics/soilbot?deviceid=1231-1231-1321-as12`_
+  all readings on the specified BOT in the system
+
+_GET /api/metrics/soilbot?startdata=2017-04-24_
+  all readings on everything since 4/24/2017
+
+_GET /api/metrics/soilbot?startdata=2017-04-24.16.00.00_
+  all readings on the specific bot since 4P 4/24/2017 (Local)
+
+
+**Success Response**
+
+* **Code:** 200 <br />
+  **Content:** `{ id: "soil-xxxx-xxx-xxx-xxx  ",  CreatedAt: "XXX" }`
+
+
+**Error Response**
+
+* **Code:** 510 <br />
+  **Content:** `{ error: "db error" }`
 
 
 
+## call POST
 
 
-**URL** <_The request type_> `POST` 
+
+**URI** `POST /api/metrics/<bottype>` 
 
 
 **Data Param**
 
+Inbound JSON data string
 < _what is required for a post_ >
 
 **Success Response**
@@ -76,6 +102,7 @@ need to run shell script to set up database initially after load (this requires 
 * need to make the VPC subnet's dynamic or variable
 * better define the GET operation (allow parameters to get data to plot)
 * cloudformation or serverless project to create the postgres DB
+* get the static google-charts.js to deploy on S3
 
 ## DB Tool
 
@@ -87,7 +114,7 @@ docker run -it -v /home/ec2-user/SignalBot:/scripts openbridge/ob_pysh-db psql -
 
 ## Graph
 
-This part is still in development, the plan is to use a *REACT* frameweok and *GraphQL* to be able to generate serverless graphing capabilities.
+This part is still in development, the plan is to use a *REACT* framework and *GraphQL* to be able to generate serverless graphing capabilities.  We want to see if it makes sense to expose a *GraphQL* endpoint to leverage teh Google Charts.js or Charts.js.
 
 * [Serverless Zone](https://serverless.zone/graphql-with-the-serverless-framework-79924829a8ca)
 * [Serverless.com](https://serverless.com/blog/running-scalable-reliable-graphql-endpoint-with-serverless/)
