@@ -95,9 +95,8 @@ resources:
             ProvisionedThroughput: ${self:custom.extra.DynamoCapacity}
       
   Outputs:
-    ExportServiceEndpoint2:
+    ExportServiceEndpoint:
       Description: "URL Endpoint for the REST Service"
-      #Value: {"Fn::Join:", ["", [ "https://", {"Ref": "ApiGatewayRestApi"}, ".execute-api.", "us-west-2", ".amazonaws.com/", "dev"]]}
       Value: 
         "Fn::Join":
           - ""
