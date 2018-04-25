@@ -17,11 +17,11 @@ import urllib2
 import argparse
 
 
-from simbot.simbot import CureBot
-from simbot.simbot import AquaBot
-from simbot.simbot import LightBot
-from simbot.simbot import SoilBot
-from simbot.simbot import GasBot
+from signalbot import CureBot
+from signalbot import AquaBot
+from signalbot import LightBot
+from signalbot import SoilBot
+from signalbot import GasBot
 
 
 
