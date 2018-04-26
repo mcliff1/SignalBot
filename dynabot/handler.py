@@ -16,6 +16,7 @@ import os
 import datetime
 import json
 import logging
+from dateutil.parser import parse
 from decimal import Decimal
 
 
@@ -121,6 +122,12 @@ def get_call(bot_type, jsonstr):
     rc = 503
     try:
 
+
+        if jsonstr is not None and 'fromdate' in jsonstr.keys():
+            fromdate = jsonstr['fromdate']
+            logging.info("parse date '%s' as %s" % (fromdate, parse(fromdate)))
+    
+
         if jsonstr is None:
             """
             No Parameters - Query most recent row in table matching this bot_type
@@ -131,6 +138,7 @@ def get_call(bot_type, jsonstr):
             jstr = {"count" : nrow,
                     "bottype" : bot_type,
                     "Id": (rslt[0]['Id'] if len(rslt) > 0 else None),
+                    "deviceid": (rslt[0].get('deviceid') if len(rslt) > 0 else None),
                     "CreatedAt": (rslt[0]['CreatedAt'] if len(rslt) > 0 else None)}
             rc = 200
 

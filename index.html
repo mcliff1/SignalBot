@@ -1,0 +1,78 @@
+<html>
+  <head>
+    <!--Load the AJAX API-->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<!--
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+-->
+    <script type="text/javascript">
+
+      // Load the Visualization API and the corechart package.
+      google.charts.load('current', {'packages':['corechart']});
+
+      // Set a callback to run when the Google Visualization API is loaded.
+      google.charts.setOnLoadCallback(drawChart);
+
+      // Callback that creates and populates a data table,
+      // instantiates the pie chart, passes in the data and
+      // draws it.
+      function drawChart() {
+
+
+
+        var data2 = new google.visualization.DataTable();
+        data2.addColumn('string', 'data');
+        data2.addColumn('number', 'temp');
+        data2.addRows([['2014-11-12', 47],
+                      ['2014-11-13', 46],
+                      ['2014-11-14', 47],
+                      ['2014-11-15', 44],
+                      ['2014-11-16', 46],
+                      ['2014-11-17', 48]]);
+
+        //var apiUrl = "https://yhjutqg0p0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/soil?deviceid=1600aaaaffff0061";
+        var apiUrl = "/data.html"
+        var xhttp = new XMLHttpRequest();
+        var data3;
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+              //document.getElementById('json_div').innerHTML = this.responseText;
+              data3 = JSON.parse(this.responseText);
+              document.getElementById('json_div').innerHTML = "Number of records:" +  data3.length;
+              htmlStr = "<ul>";
+
+
+              for (obj in data3) {
+                  htmlStr += "<li>" + data3[obj] + "</li>";
+              }
+              htmlStr += "</ul>";
+              document.getElementById('json_parts').innerHTML = htmlStr;
+          }
+        }
+        xhttp.open("GET", apiUrl, true);
+        xhttp.send();
+
+
+        // Set chart options
+        var options = {'title':'How Much Pizza I Ate Last Night',
+                       'width':400,
+                       'height':300};
+
+        // Instantiate and draw our chart, passing in some options.
+        //var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        chart.draw(data2, options);
+      }
+    </script>
+  </head>
+
+  <body>
+    <!--Div that will hold the pie chart-->
+    <div id="chart_div"></div>
+    <div id="json_div"></div>
+    <div id="json_parts"></div>
+  </body>
+</html>
+
+

@@ -1,11 +1,21 @@
 # SignalBot -  Serverless
+
+## Purpose
+
 Project contains `serverless.yml` file for RESTful interface to receive JSON formated data from multiple types of *sensor bots*.
 
 The design approach is to leverage serverless technology, and template as much as possible for easy duplication. The current architecture is using a **PostgreSQL** backend database, we also include a **DynamoDB** alternative for a more scalable design.
 
 In addition there is a *SimBot/sim.py* file which contains a simulator and *SimBot/simbot* python package folder to simululation the *sensor bots*.
 
-## Architecture
+**Contents**
+* [Install](#install)
+* [Architecture](#architecture)
+* [REST API](#api)
+* [CloudFormation](#cloudformation)
+
+## Install
+
 This is going to leverage the AWS cloud and Serverless stack.
 
 For Serverless workstation
@@ -21,6 +31,9 @@ For Serverless workstation
 
 OR you can use this [cloud formation template](https://github.com/mcliff1/aws/blob/master/cfn-ec2workstation.json)
  
+## Architecture
+
+
   start with
 >  /api/metrics/soil 
 >  {"beg":"beg","deviceid":"3c003e000247353137323334","soilmoisture1":"3308","soilmoisture2":"3498","soilmoisture3":"1","humidity":"16.9000","tempc":"22.0000","tempf":"71.6000","volts":"4.2250","battery":"104.9375"}
@@ -31,10 +44,9 @@ this module will build a postgres RDS database to back end the REST API
 
 need to run shell script to set up database initially after load (this requires docker)
 
-**Bot REST API**
-----
+## API
 
-## call GET
+### call GET
 
  <_Additional info about the call. _>
 
@@ -112,6 +124,31 @@ If you have docker installed, this is a great tool
 docker run -it -v /home/ec2-user/SignalBot:/scripts openbridge/ob_pysh-db psql -h dbid1.cwql9pca9fko.us-west-2.rds.amazonaws.com -p 5432 -U dbuser -d dbname1
 ```
 
+## Cloudformation
+[Back to Top](#purpose)
+
+
+<table width="100%">
+  <tr><th align="left">Dynabot</th></tr>
+  <tr>
+    <td width="100%" valign="top">
+    <p>Creates everything</p>
+    <h6>Pre Requistes</h6>
+    <ol>
+      <li>Static Content</li>
+      <li>DNS name in Route53</li>
+    </ol>
+    <h6>Create Details</h6>
+    <ol>
+      <li>creates some S3 buckets</li>
+      <li>a lambda function</li>
+      <li>CFN, SSL cert</li>
+      <li>Route53 DNS entry</li>
+    </ol>
+    </td>
+  </tr>
+</table>
+
 ## Graph
 
 This part is still in development, the plan is to use a *REACT* framework and *GraphQL* to be able to generate serverless graphing capabilities.  We want to see if it makes sense to expose a *GraphQL* endpoint to leverage teh Google Charts.js or Charts.js.
@@ -122,4 +159,10 @@ This part is still in development, the plan is to use a *REACT* framework and *G
 biggest struggle was I needed to install yarn and set up the json.dependencies and then run `yarn install`
 
 to install yarn, simply type `sudo npm i yarn -g`
+
+
+## Reference
+
+* [Stelligent CFN Templats](https://github.com/stelligent/cloudformation_templates/blob/master/README.md) on GitHub
+
 
