@@ -31,8 +31,8 @@
                       ['2014-11-16', 46],
                       ['2014-11-17', 48]]);
 
-        //var apiUrl = "https://yhjutqg0p0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/soil?deviceid=1600aaaaffff0061";
-        var apiUrl = "/data.html"
+        var apiUrl = "https://ryh49o7496.execute-api.us-west-2.amazonaws.com/dev/api/metrics/soil?deviceid=1600aaaaffff0061";
+        //var apiUrl = "/data.html"
         var xhttp = new XMLHttpRequest();
         var data3;
         xhttp.onreadystatechange = function() {
@@ -44,7 +44,7 @@
 
 
               for (obj in data3) {
-                  htmlStr += "<li>" + data3[obj] + "</li>";
+                  htmlStr += "<li>" + JSON.stringify(data3[obj]) + "</li>";
               }
               htmlStr += "</ul>";
               document.getElementById('json_parts').innerHTML = htmlStr;
@@ -55,7 +55,7 @@
 
 
         // Set chart options
-        var options = {'title':'How Much Pizza I Ate Last Night',
+        var options = {'title':'Temperature Plot of SoilBot',
                        'width':400,
                        'height':300};
 

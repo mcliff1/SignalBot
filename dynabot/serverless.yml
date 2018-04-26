@@ -49,11 +49,19 @@ functions:
       - http:
           path: api/metrics/{bottype}
           method: get
-          cors: true
+          cors: 
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+    
       - http:
           path: api/metrics/{bottype}
           method: post
-          cors: true
 
 
 

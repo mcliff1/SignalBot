@@ -138,7 +138,6 @@ def get_call(bot_type, jsonstr):
             jstr = {"count" : nrow,
                     "bottype" : bot_type,
                     "Id": (rslt[0]['Id'] if len(rslt) > 0 else None),
-                    "deviceid": (rslt[0].get('deviceid') if len(rslt) > 0 else None),
                     "CreatedAt": (rslt[0]['CreatedAt'] if len(rslt) > 0 else None)}
             rc = 200
 
@@ -168,6 +167,7 @@ def get_call(bot_type, jsonstr):
         "body": json.dumps(jstr, cls=DecimalEncoder),
         "statusCode" : rc,
         "headers": {
+            "Access-Control-Allow-Origin" : "*",
             "Content-Type" : "application/json",
         },
     }

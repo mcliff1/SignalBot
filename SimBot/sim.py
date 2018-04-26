@@ -101,5 +101,5 @@ if __name__ == '__main__':
     ]
 
     url_rds = "https://i0959l88u2.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
-    url_ddb = "https://yhjutqg0p0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
+    url_ddb = "https://ryh49o7496.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
     main(bot_list=BOT_ARRAY, url=url_ddb)
