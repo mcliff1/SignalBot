@@ -21,15 +21,9 @@
 
 
 
-        var data2 = new google.visualization.DataTable();
-        data2.addColumn('string', 'data');
-        data2.addColumn('number', 'temp');
-        data2.addRows([['2014-11-12', 47],
-                      ['2014-11-13', 46],
-                      ['2014-11-14', 47],
-                      ['2014-11-15', 44],
-                      ['2014-11-16', 46],
-                      ['2014-11-17', 48]]);
+        var dataTable = new google.visualization.DataTable();
+        dataTable.addColumn('date', 'date');
+        dataTable.addColumn('number', 'temp');
 
         var apiUrl = "https://ryh49o7496.execute-api.us-west-2.amazonaws.com/dev/api/metrics/soil?deviceid=1600aaaaffff0061";
         //var apiUrl = "/data.html"
@@ -42,28 +36,38 @@
               document.getElementById('json_div').innerHTML = "Number of records:" +  data3.length;
               htmlStr = "<ul>";
 
-
+              data = []
               for (obj in data3) {
                   htmlStr += "<li>" + JSON.stringify(data3[obj]) + "</li>";
+                  data.push( [ new Date(data3[obj].CreatedAt), data3[obj].tempf ] )
               }
               htmlStr += "</ul>";
-              document.getElementById('json_parts').innerHTML = htmlStr;
+              //document.getElementById('json_parts').innerHTML = JSON.stringify(data);
+              dataTable.addRows(data);
+
+            // Set chart options
+            var options = {'title':'Temperature Plot of SoilBot',
+                           'width':400,
+                           'height':300};
+
+            // Instantiate and draw our chart, passing in some options.
+            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+            chart.draw(dataTable, options);
+
           }
         }
         xhttp.open("GET", apiUrl, true);
         xhttp.send();
 
 
-        // Set chart options
-        var options = {'title':'Temperature Plot of SoilBot',
-                       'width':400,
-                       'height':300};
-
-        // Instantiate and draw our chart, passing in some options.
-        //var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        chart.draw(data2, options);
       }
+
+
+
+
+
+
+
     </script>
   </head>
 
@@ -71,7 +75,6 @@
     <!--Div that will hold the pie chart-->
     <div id="chart_div"></div>
     <div id="json_div"></div>
-    <div id="json_parts"></div>
   </body>
 </html>
 
