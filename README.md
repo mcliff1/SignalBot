@@ -12,7 +12,7 @@ In addition the *pyapi.py* utility can maintain a list of endpoints for POST/GET
 * [Architecture](#architecture)
 * [REST API](#api)
 * [GraphQL](#graphql)
-* [Install](#install)
+* [Install](#install--set-up-workstation)
 * [References](#references)
 
 
@@ -118,42 +118,48 @@ Inbound JSON data string
 ### SLS Workstation
   This server will be able to deploy SLS scripts.
 
+Use the Cloud Formation template from *mcliff1/aws* [ec2-slsworkstation](https://github.com/mcliff1/aws/blob/master/ec2-slsworkstation.json)
+
+
+OLD Steps
   These steps will bootstrap an EC2 instance (TODO - replace with CFN template)
   * Create a new Amazon Linux AMI 2016-09
   * `sudo yum install -y git`
   * `git clone https://github.com/mcliff1/SignalBot`
   * `sudo SignalBot/bootstrap.sh`
-  * create an IAM user account with a Key for access to CLI (would be nice to do this with a server role, but the serverless framework uses the API Key)
-  * `sls config credentials --provider aws --key <publickey> --secret <privatekey>`
+  * `git config --global --edit` to set GIT credentials
+  * TODO - do we have the IAM role set up?
   * in the *SignalBot/bot* directory run `sls info` (or `sls deploy`)
 
 
-  OR you can use this [cloud formation template](https://github.com/mcliff1/aws/blob/master/cfn-ec2workstation.json)
 
 
 ### RDS DB Workstation
 
-  These only apply for the RDS solution, and will create a EC2 instance that you can use to connect to or bridge to the RDS instance of PostgreSQL.
+These only apply for the RDS solution, and will create a EC2 instance that you can use to connect to or bridge to the RDS instance of PostgreSQL.
+
+For now use the *mcliff1/aws/bastion.json* script.
+
+Use the bastion host template in *mcliff1/aws* and then run the following; enter the DB password at the prompt (in the future once the bastion.json settles down we can branch that and make this one-stop, along with some prebuilt utilities that know the location of the DB, they are available from CloudFormation).
 
 
-  With Docker installed, this is a great tool
-
-  makes the *SignalBot* directory available to call scripts
-  ```
-  docker run -it -v /home/ec2-user/SignalBot:/scripts openbridge/ob_pysh-db psql \
-  -h <db-endpoin-url> \
-  -p 5432 -U dbuser -d dbname1
-  ```
 
 ### RDS build
 
-You will need to have an RDS DB workstation built in order to bootstrap the database structure
-For fresh build use the *rds-postgres.json* template, followed by the (TBD) *populate-db.sh* script run from; it will take the 'rds-postgres' stack name and db password as two parameters.
-
-Alternatively, you can run the *rds-postgres-snapshot.json* template which will build the RDS database from a snapshot.
+You can either set up the RDS database from a snapshot or build from source. In either case you will need to run either *rds-postgres.json* or *rds-postgres-snapshot.json* template. These require that a *mcliff1/aws/vpc.json* stack has already created. The RDS will be non-publicly accessible and created in the private subnets of the VPC, a DB workstation or Bastion host will be required to directly access. The output parameters *dbname*, *dbuser*, and  *db_endpoint* can be queried from either stack (**TODO this isn't done yet**)
 
 
-You will be able to get the *dbname*, *dbuser*, and  *db_endpoint* from either stack.
+```
+% git clone https://github.com/mcliff1/signalbot
+% docker run -it -v /home/ec2-user/SignalBot:/scripts openbridge/ob_pysh-db psql \
+-h <db-endpoint-url> \
+-p 5432 -U dbuser -d dbname1 -f /scripts/createdb.sql
+```
+
+
+This pulls the **SignalBot** repository locally (all we need is the create script) and runs a docker utility to load the database.
+
+
 
 
 ### Stacks
