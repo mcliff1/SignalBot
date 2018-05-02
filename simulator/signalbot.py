@@ -263,3 +263,16 @@ class GasBot(SimBot):
 
 
 #----------------------end section for class defition
+
+
+class Config(object):
+    """
+    Configuration file object lets us get and persist urls
+    """
+
+    def save(self, name, url):
+        """
+        saves a url to the specified key 'name'
+        """
+
+

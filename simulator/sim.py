@@ -23,6 +23,8 @@ from signalbot import LightBot
 from signalbot import SoilBot
 from signalbot import GasBot
 
+from signalbot import Config
+
 
 
 def post_data(bot, url):
@@ -100,6 +102,7 @@ if __name__ == '__main__':
         GasBot('7000bbaagggg0007'),
     ]
 
-    url_rds = "https://i0959l88u2.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
+    url_rds = "https://hgza90qj3h.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
     url_ddb = "https://ryh49o7496.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
-    main(bot_list=BOT_ARRAY, url=url_ddb)
+    #main(bot_list=BOT_ARRAY, url=url_ddb)
+    main(bot_list=BOT_ARRAY, url=url_rds)
