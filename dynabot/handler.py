@@ -123,8 +123,8 @@ def get_call(bot_type, jsonstr):
     try:
 
 
-        if jsonstr is not None and 'fromdate' in jsonstr.keys():
-            fromdate = jsonstr['fromdate']
+        if jsonstr is not None and 'startdate' in jsonstr.keys():
+            fromdate = jsonstr['startdate']
             logging.info("parse date '%s' as %s" % (fromdate, parse(fromdate)))
     
 
@@ -150,11 +150,46 @@ def get_call(bot_type, jsonstr):
             """
             Return data for this bot
             """
-            rslt = db_table.query(KeyConditionExpression=Key('Id').eq(bot_type + '-' + jsonstr['deviceid']))['Items']
+
+
+            if 'startdate' in jsonstr.keys():
+                """
+                we also have to filter on the date
+                """
+
+                rslt = db_table.query(KeyConditionExpression=Key('Id').eq(bot_type + '-' + jsonstr['deviceid']) & Key('CreatedAt').gte(jsonstr['startdate']))['Items']
+          
+ 
+            else:
+                """
+                return all data for this device
+                """
+                rslt = db_table.query(KeyConditionExpression=Key('Id').eq(bot_type + '-' + jsonstr['deviceid']))['Items']
+
+
 
             # this is a list of JSON objects,  do I just return them direct??
             logging.info(len(rslt))
             
+            # strip out the Id field
+            for element in rslt:
+                del element['Id']
+
+            jstr = rslt 
+            rc = 200
+        elif 'startdate' in jsonstr.keys():
+            """
+            Return ALL data for this type of bot since this date
+   
+            NOT SUPPORTED
+            """
+
+            rslt = db_table.query(IndexName="BotTypeIndex", KeyConditionExpression=Key('bottype').eq(bot_type) & Key('CreatedAt').gte(jsonstr['startdate']))['Items']
+
+
+
+
+            # I think I need to loop through and do a bulk query on this list of keys
             # strip out the Id field
             for element in rslt:
                 del element['Id']
