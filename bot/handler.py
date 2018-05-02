@@ -14,6 +14,7 @@ import json
 import logging
 # from https://github.com/jkehler/awslambda-psycopg2
 import psycopg2
+from datetime import date, datetime
 
 
 LOGGER = logging.getLogger()
@@ -55,6 +56,21 @@ BOT_SQL_INS = {
 }
 
 
+BOT_SQL_SELECT = {
+    'soil' : "SELECT created_at, version, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid from soil_bot WHERE deviceid = %s",
+    'cure' : "INSERT INTO cure_bot (created_at, version, battery, humidity, infrared, uvindex, visible, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+    'aqua' : "SELECT created_at, version, battery, ec, sal, sg, tds, ph, doxygen, tempc, tempf, volts, deviceid from aqua_bot WHERE deviceid = %s",
+    'gas' : "INSERT INTO gas_bot (created_at, version, battery, carbondioxide, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s)",
+    'light' : "INSERT INTO light_bot (created_at, version, battery, humidity, infrared, fullspec, visible, lux, par, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+}
+
+
+
+def json_serial(obj):
+    """ JSON serializer for objects not serializable by default """
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    return obj
 
 def get_tuple(in_dict, in_tuple):
     """
@@ -121,7 +137,7 @@ def post_call(bot_type, in_json):
 
 
 SQL_CNT = "SELECT count(*) from %s"
-SQL_GET_LATEST = "SELECT created_at from %s where created_at is not null order by created_at DESC limit 1"
+SQL_GET_LATEST = "SELECT created_at, deviceid from %s where created_at is not null order by created_at DESC limit 1"
 
 def get_call(bot_type, jsonstr):
     """
@@ -130,13 +146,70 @@ def get_call(bot_type, jsonstr):
     logging.info("get_call(%s, %s)" % (bot_type, jsonstr))
     nrows = 0
     last_update = None
+    device_id = None
+    jstr = None
+
     try:
         open_connection()
         cur = CONN.cursor()
-        cur.execute(SQL_CNT % BOT_TYPES[bot_type])
-        nrows = cur.fetchone()[0]
-        cur.execute(SQL_GET_LATEST % BOT_TYPES[bot_type])
-        last_update = cur.fetchone()[0]
+
+
+        if jsonstr is None:
+            """ 
+            make the no-param call to get count
+            """
+
+            cur.execute(SQL_CNT % BOT_TYPES[bot_type])
+            nrows = cur.fetchone()[0]
+            cur.execute(SQL_GET_LATEST % BOT_TYPES[bot_type])
+            r_row = cur.fetchone()
+            last_update = r_row[0]
+            device_id = r_row[1]
+
+
+            jstr = {"count" : nrows,
+                    "deviceid" : device_id,
+                    "TODO" : "trim timestamp down to seconds",
+                    "CreatedAt": (last_update.isoformat() if last_update is not None else None)}
+
+        elif 'deviceid' in jsonstr.keys():
+            """ 
+            get all the data for the device
+            """
+
+            if 'startdate' in jsonstr.keys():
+                """ 
+                get all the data for the device
+                """
+                jstr = {"message" : "not implemented method with date paramater string" }
+
+            else:
+                """ 
+                get all the data for the device
+                """
+                cur.execute(BOT_SQL_SELECT[bot_type], (jsonstr['deviceid'],))
+
+                rslt = cur.fetchall()
+
+
+                # the 0th elem is created_at
+                # the rest match BOT_KEYS[bot_type]
+                dict_names = ('CreatedAt', ) + BOT_KEYS[bot_type]
+                jstr = list(map( lambda x: dict(zip(dict_names, x)), rslt))
+                logging.info("****Jstr.len", len(rslt));
+                logging.info("****Jstr", rslt);
+
+
+        else:
+            jstr = {"message" : "unknown paramater string" }
+
+
+
+
+
+
+
+
     except Exception as sql_exception:
         logging.exception(sql_exception)
         # responseStatus = 503
@@ -144,9 +217,10 @@ def get_call(bot_type, jsonstr):
         if CONN is not None:
             CONN.close()
 
-    jstr = {"cnt" : nrows,
-            "resource" : bot_type,
-            "lastUpdate": (last_update.isoformat() if last_update is not None else None)}
+    if jstr is None:
+        jstr = { "message": "something went wrong" }
+
+
     return jstr
 
 

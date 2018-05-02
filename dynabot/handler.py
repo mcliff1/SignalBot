@@ -123,8 +123,8 @@ def get_call(bot_type, jsonstr):
     try:
 
 
-        if jsonstr is not None and 'fromdate' in jsonstr.keys():
-            fromdate = jsonstr['fromdate']
+        if jsonstr is not None and 'startdate' in jsonstr.keys():
+            fromdate = jsonstr['startdate']
             logging.info("parse date '%s' as %s" % (fromdate, parse(fromdate)))
     
 
@@ -134,27 +134,71 @@ def get_call(bot_type, jsonstr):
             """
             nrow = db_table.query(IndexName="BotTypeIndex", Select="COUNT", KeyConditionExpression=Key('bottype').eq(bot_type))['Count']
             rslt = db_table.query(IndexName="BotTypeIndex", ScanIndexForward=False, Limit=1, KeyConditionExpression=Key('bottype').eq(bot_type))['Items']
+            r_deviceid = None
+            r_CreatedAt = None
+            if len(rslt) > 0:
+                r_CreatedAt = rslt[0]['CreatedAt']
+                r_deviceid = rslt[0]['Id']  # todo trim this later
            
             jstr = {"count" : nrow,
-                    "bottype" : bot_type,
-                    "Id": (rslt[0]['Id'] if len(rslt) > 0 else None),
-                    "CreatedAt": (rslt[0]['CreatedAt'] if len(rslt) > 0 else None)}
+                    "deviceid": r_deviceid,
+                    "CreatedAt": r_CreatedAt,
+                    "TODO": "trim off bottype"}
             rc = 200
 
         elif 'deviceid' in jsonstr.keys():
             """
             Return data for this bot
             """
-            rslt = db_table.query(KeyConditionExpression=Key('Id').eq(bot_type + '-' + jsonstr['deviceid']))['Items']
+
+
+            if 'startdate' in jsonstr.keys():
+                """
+                we also have to filter on the date
+                """
+
+                rslt = db_table.query(KeyConditionExpression=Key('Id').eq(bot_type + '-' + jsonstr['deviceid']) & Key('CreatedAt').gte(jsonstr['startdate']))['Items']
+          
+ 
+            else:
+                """
+                return all data for this device
+                """
+                rslt = db_table.query(KeyConditionExpression=Key('Id').eq(bot_type + '-' + jsonstr['deviceid']))['Items']
+
+
 
             # this is a list of JSON objects,  do I just return them direct??
             logging.info(len(rslt))
-         
-            jstr = rslt
+            
+            # strip out the Id field
+            for element in rslt:
+                del element['Id']
+
+            jstr = rslt 
+            rc = 200
+        elif 'startdate' in jsonstr.keys():
+            """
+            Return ALL data for this type of bot since this date
+   
+            NOT SUPPORTED
+            """
+
+            rslt = db_table.query(IndexName="BotTypeIndex", KeyConditionExpression=Key('bottype').eq(bot_type) & Key('CreatedAt').gte(jsonstr['startdate']))['Items']
+
+
+
+
+            # I think I need to loop through and do a bulk query on this list of keys
+            # strip out the Id field
+            for element in rslt:
+                del element['Id']
+
+            jstr = rslt 
             rc = 200
         else:
             jstr = {"msg" : "invalid request parameters", 
-                    "data" : json.dumps(jsonstr, cls=DecimalEncoder) }
+                    "data" : jsonstr}
             rc = 400
 
     except Exception as db_exception:
@@ -229,4 +273,6 @@ def handle_dynabot1(event, context):
             "Content-Type" : "application/json",
         },
     }
+
+
 

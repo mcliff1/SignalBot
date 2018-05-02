@@ -102,7 +102,9 @@ if __name__ == '__main__':
         GasBot('7000bbaagggg0007'),
     ]
 
-    url_rds = "https://hgza90qj3h.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
-    url_ddb = "https://ryh49o7496.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
-    #main(bot_list=BOT_ARRAY, url=url_ddb)
-    main(bot_list=BOT_ARRAY, url=url_rds)
+    url_rds = "https://vwqqwu30m0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
+    url_ddb = "https://1ujflj28sk.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
+    #main(bot_list=BOT_ARRAY, url=url_rds)
+    main(bot_list=BOT_ARRAY, url=url_ddb)
+
+

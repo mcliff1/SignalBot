@@ -98,7 +98,7 @@ resources:
                 KeyType: RANGE
             Projection: 
               NonKeyAttributes:
-                - "bottype"
+                - "deviceid"
               ProjectionType: "INCLUDE"
             ProvisionedThroughput: ${self:custom.extra.DynamoCapacity}
       
