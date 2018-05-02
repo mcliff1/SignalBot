@@ -41,39 +41,35 @@ The Lambda function connects to a DynamoDB table, the REST interface does not ch
 [back to top](#purpose)
 
 Example
->  /api/metrics/soil
->  {"beg":"beg","deviceid":"3c003e000247353137323334","soilmoisture1":"3308","soilmoisture2":"3498","soilmoisture3":"1","humidity":"16.9000","tempc":"22.0000","tempf":"71.6000","volts":"4.2250","battery":"104.9375"}
+>  POST /api/metrics/soil
+>
+> {"beg":"beg","deviceid":"3c003e000247353137323334","soilmoisture1":"3308","soilmoisture2":"3498","soilmoisture3":"1","humidity":"16.9000","tempc":"22.0000","tempf":"71.6000","volts":"4.2250","battery":"104.9375"}
 
 
 #### GET
 
- <_Additional info about the call. _>
+No parameters, returns count, and information about most recent add; deviceid and startdate parameters can be provided for filtering, there is no way in the API to get list of deviceid's.
 
 **URI** `GET /api/metrics/<bottype>`
 
 **Params**
-* **Required (or startdate or enddate)** `deviceid=[string]`
-* **Required (or deviceid or enddate)** `startdate=[string]`
-* **Required (or startdate or deviceid)** `enddate=[string]`
-* **Optional** `CreatedAt="YYYY-MM-DD.HH:MM:SS"` (or partial)
+* `deviceid=[string]` - returns all information about designated bot
+* Both `deviceid` and `startdate` - returns information since date for specified bot
 
-< _example request_ >
+**example request**
 _GET /api/metrics/soilbot_
+**Content:** `{ 'count': xxx, 'deviceid' : 'xxxx-xxx-xxx-xxx', 'CreatedAt': 'XXX' }`
 
 _GET /api/metrics/soilbot?deviceid=1231-1231-1321-as12`_
   all readings on the specified BOT in the system
 
-_GET /api/metrics/soilbot?startdata=2017-04-24_
-  all readings on everything since 4/24/2017
-
-_GET /api/metrics/soilbot?startdata=2017-04-24.16.00.00_
-  all readings on the specific bot since 4P 4/24/2017 (Local)
+_GET /api/metrics/soilbot?startdate=2018-05-02&deviceid=1231-1231-123-1230_
+  all readings on the specific bot since 5/2/2018
 
 
 **Success Response**
 
 * **Code:** 200 <br />
-  **Content:** `{ id: "soil-xxxx-xxx-xxx-xxx  ",  CreatedAt: "XXX" }`
 
 
 **Error Response**
