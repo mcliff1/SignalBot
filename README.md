@@ -150,7 +150,7 @@ You can either set up the RDS database from a snapshot or build from source. In 
 
 
 ```
-% git clone https://github.com/mcliff1/signalbot
+% git clone https://github.com/mcliff1/SignalBot
 % docker run -it -v /home/ec2-user/SignalBot:/scripts openbridge/ob_pysh-db psql \
 -h <db-endpoint-url> \
 -p 5432 -U dbuser -d dbname1 -f /scripts/createdb.sql
