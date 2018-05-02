@@ -1,9 +1,10 @@
-service: bot
+service: rdsbot
 
 custom:
   stage: ${opt:stage, self:provider.stage}
   region: ${opt:region, self:provider.region}
   vpcStack: ${opt:vpcStack}
+  rdsStack: ${opt:vpcStack, 'none'}
 
 # TODO - need to pull the  vpc id and subnet groups out
 #   they need to be whatever the RDBMS is in
@@ -14,42 +15,22 @@ provider:
   name: aws
   runtime: python3.6
 
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
-
-# you can define service wide environment variables here
-# # https://serverless.com/framework/docs/providers/aws/guide/variables/#reference-cloudformation-outputs
   environment:
     RDS_HOST: 
         'Fn::ImportValue' : '${self:custom.vpcStack}-SecurityGroupId'
     RDS_DBNAME: dbname
     RDS_USERNAME: username
     RDS_PASSWORD: password
+    RDS_PROP: { 'Fn::ImportValue' : '${self:custom.rdsStack}-VpcId' }
 
-# ideally this part would import as JSON from some AWS CLI command to see where our DB is running
-# in the mean time, these need to match
   vpc:
     securityGroupIds:
-      - "Fn::ImportValue" : "${self:cutom.vpcStack}-SecurityGroupId"
+      - 'Fn::ImportValue' : '${self:custom.vpcStack}-SecurityGroupId' 
     subnetIds:
-      - "Fn::ImportValue" : "${self:cutom.vpcStack}-PrivateSubnet1Id"
-      - "Fn::ImportValue" : "${self:cutom.vpcStack}-PrivateSubnet2Id"
-      - "Fn::ImportValue" : "${self:cutom.vpcStack}-PrivateSubnet3Id"
+      - "Fn::ImportValue" : "${self:custom.vpcStack}-PrivateSubnet1Id"
+      - "Fn::ImportValue" : "${self:custom.vpcStack}-PrivateSubnet2Id"
+      - "Fn::ImportValue" : "${self:custom.vpcStack}-PrivateSubnet3Id"
 
-# you can add packaging information here
 package:
   include:
     - psycopg2/**
@@ -59,24 +40,38 @@ functions:
     handler: handler.handle_bot
     tags:
       created: serverless for SignalBot service
-      something:
-        'Fn::ImportValue' : '${self:custom.vpcStack}-SecurityGroupId'
+      Name: "${self:service}-${self:custom.stage}-service"
       
 
     events:
       - http:
           path: api/metrics/{bottype}
           method: get
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
       - http:
           path: api/metrics/{bottype}
           method: post
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
 
 
 
-# you can add CloudFormation resource templates here
-# https://github.com/mugglmenzel/serverless-examples-cached-rds-ws/blob/master/serverless.yml
 resources:
   Outputs:
      ExportServiceEndpoint:
@@ -92,6 +87,4 @@ resources:
               - ${self:custom.stage}
        Export: 
            Name: "${self:service}-${self:custom.stage}-Endpoint"
-
-
 
