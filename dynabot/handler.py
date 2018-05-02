@@ -134,11 +134,16 @@ def get_call(bot_type, jsonstr):
             """
             nrow = db_table.query(IndexName="BotTypeIndex", Select="COUNT", KeyConditionExpression=Key('bottype').eq(bot_type))['Count']
             rslt = db_table.query(IndexName="BotTypeIndex", ScanIndexForward=False, Limit=1, KeyConditionExpression=Key('bottype').eq(bot_type))['Items']
+            r_deviceid = None
+            r_CreatedAt = None
+            if len(rslt) > 0:
+                r_CreatedAt = rslt[0]['CreatedAt']
+                r_deviceid = rslt[0]['Id']  # todo trim this later
            
             jstr = {"count" : nrow,
-                    "bottype" : bot_type,
-                    "Id": (rslt[0]['Id'] if len(rslt) > 0 else None),
-                    "CreatedAt": (rslt[0]['CreatedAt'] if len(rslt) > 0 else None)}
+                    "deviceid": r_deviceid,
+                    "CreatedAt": r_CreatedAt,
+                    "TODO": "trim off bottype"}
             rc = 200
 
         elif 'deviceid' in jsonstr.keys():
@@ -149,12 +154,16 @@ def get_call(bot_type, jsonstr):
 
             # this is a list of JSON objects,  do I just return them direct??
             logging.info(len(rslt))
-         
-            jstr = rslt
+            
+            # strip out the Id field
+            for element in rslt:
+                del element['Id']
+
+            jstr = rslt 
             rc = 200
         else:
             jstr = {"msg" : "invalid request parameters", 
-                    "data" : json.dumps(jsonstr, cls=DecimalEncoder) }
+                    "data" : jsonstr}
             rc = 400
 
     except Exception as db_exception:
@@ -229,4 +238,6 @@ def handle_dynabot1(event, context):
             "Content-Type" : "application/json",
         },
     }
+
+
 
