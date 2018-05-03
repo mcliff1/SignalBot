@@ -1,10 +1,11 @@
 service: rdsbot
 
+# requires options vpcStack and rdsStack
 custom:
   stage: ${opt:stage, self:provider.stage}
   region: ${opt:region, self:provider.region}
   vpcStack: ${opt:vpcStack}
-  rdsStack: ${opt:vpcStack, 'none'}
+  rdsStack: ${opt:rdsStack, 'none'}
 
 # TODO - need to pull the  vpc id and subnet groups out
 #   they need to be whatever the RDBMS is in
@@ -16,12 +17,11 @@ provider:
   runtime: python3.6
 
   environment:
-    RDS_HOST: 
-        'Fn::ImportValue' : '${self:custom.vpcStack}-SecurityGroupId'
+    RDS_HOST: { 'Fn::ImportValue' : '${self:custom.rdsStack}-DbHost' }
     RDS_DBNAME: dbname
     RDS_USERNAME: username
     RDS_PASSWORD: password
-    RDS_PROP: { 'Fn::ImportValue' : '${self:custom.rdsStack}-VpcId' }
+    RDS_PROP: { 'Fn::ImportValue' : '${self:custom.rdsStack}-DbHost' } # todo see if VpcId can be pulled from rdsStack and used below
 
   vpc:
     securityGroupIds:

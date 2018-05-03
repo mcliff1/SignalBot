@@ -37,7 +37,6 @@ BOT_TYPES = {
     'light' : 'light_bot',
 }
 
-
 BOT_KEYS = {
     'soil' : ('battery', 'humidity', 'soilmoisture1', 'soilmoisture2', 'soilmoisture3', 'tempc', 'tempf', 'volts', 'deviceid'),
     'cure' : ('battery', 'humidity', 'infrared', 'uvindex', 'visible', 'tempc', 'tempf', 'volts', 'deviceid'),
@@ -47,30 +46,14 @@ BOT_KEYS = {
 }
 
 
-BOT_SQL_INS = {
-    'soil' : "INSERT INTO soil_bot (created_at, version, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-    'cure' : "INSERT INTO cure_bot (created_at, version, battery, humidity, infrared, uvindex, visible, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-    'aqua' : "INSERT INTO aqua_bot (created_at, version, battery, ec, sal, sg, tds, ph, doxygen, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-    'gas' : "INSERT INTO gas_bot (created_at, version, battery, carbondioxide, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s)",
-    'light' : "INSERT INTO light_bot (created_at, version, battery, humidity, infrared, fullspec, visible, lux, par, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-}
 
 
-BOT_SQL_SELECT = {
-    'soil' : "SELECT created_at, version, battery, humidity, soilmoisture1, soilmoisture2, soilmoisture3, tempc, tempf, volts, deviceid from soil_bot WHERE deviceid = %s",
-    'cure' : "INSERT INTO cure_bot (created_at, version, battery, humidity, infrared, uvindex, visible, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-    'aqua' : "SELECT created_at, version, battery, ec, sal, sg, tds, ph, doxygen, tempc, tempf, volts, deviceid from aqua_bot WHERE deviceid = %s",
-    'gas' : "INSERT INTO gas_bot (created_at, version, battery, carbondioxide, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s)",
-    'light' : "INSERT INTO light_bot (created_at, version, battery, humidity, infrared, fullspec, visible, lux, par, tempc, tempf, volts, deviceid) VALUES (now(), 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-}
-
-
-
-def json_serial(obj):
+class MyEncoder(json.JSONEncoder):
     """ JSON serializer for objects not serializable by default """
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    return obj
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat(' ', 'seconds')  #python3
+        return json.JSONEncoder.default(self, obj)
 
 def get_tuple(in_dict, in_tuple):
     """
@@ -118,7 +101,11 @@ def post_call(bot_type, in_json):
         open_connection()
         cur = CONN.cursor()
         logging.info("about to execute")
-        cur.execute(BOT_SQL_INS[bot_type], data_vals)
+        sql_stmt = ''.join(['INSERT INTO ', BOT_TYPES[bot_type], ' (created_at, version, ',
+                   ', '.join(BOT_KEYS[bot_type]),  ') VALUES (now(), 0',
+                   ', %s' * len(BOT_KEYS[bot_type]), ')'])
+
+        cur.execute(sql_stmt, data_vals)
         CONN.commit()
         logging.info("commit complete")
     except Exception as sql_exception:
@@ -136,8 +123,6 @@ def post_call(bot_type, in_json):
 
 
 
-SQL_CNT = "SELECT count(*) from %s"
-SQL_GET_LATEST = "SELECT created_at, deviceid from %s where created_at is not null order by created_at DESC limit 1"
 
 def get_call(bot_type, jsonstr):
     """
@@ -159,9 +144,11 @@ def get_call(bot_type, jsonstr):
             make the no-param call to get count
             """
 
-            cur.execute(SQL_CNT % BOT_TYPES[bot_type])
+            cur.execute('SELECT count(*) FROM %s' % BOT_TYPES[bot_type])  # use %, part of SQL statement
             nrows = cur.fetchone()[0]
-            cur.execute(SQL_GET_LATEST % BOT_TYPES[bot_type])
+
+            sql_stmt = 'SELECT created_at, deviceid from %s where created_at is not null order by created_at DESC limit 1' % BOT_TYPES[bot_type] 
+            cur.execute(sql_stmt)
             r_row = cur.fetchone()
             last_update = r_row[0]
             device_id = r_row[1]
@@ -169,42 +156,43 @@ def get_call(bot_type, jsonstr):
 
             jstr = {"count" : nrows,
                     "deviceid" : device_id,
-                    "TODO" : "trim timestamp down to seconds",
-                    "CreatedAt": (last_update.isoformat() if last_update is not None else None)}
+                    "CreatedAt": (last_update.isoformat(' ', 'seconds') if last_update is not None else None)}
 
         elif 'deviceid' in jsonstr.keys():
             """ 
             get all the data for the device
             """
 
+            sql_stmt = ''.join(['SELECT created_at, version, ',
+                       ', '.join(BOT_KEYS[bot_type]), ' FROM ',
+                       BOT_TYPES[bot_type], ' WHERE deviceid = %s'])
+
             if 'startdate' in jsonstr.keys():
                 """ 
                 get all the data for the device
                 """
-                jstr = {"message" : "not implemented method with date paramater string" }
+                
+
+                cur.execute(''.join([sql_stmt, ' AND created_at > %s']), (jsonstr['deviceid'], jsonstr['startdate']))
 
             else:
                 """ 
                 get all the data for the device
                 """
-                cur.execute(BOT_SQL_SELECT[bot_type], (jsonstr['deviceid'],))
+                cur.execute(sql_stmt, (jsonstr['deviceid'],))
 
-                rslt = cur.fetchall()
+            rslt = cur.fetchall()
 
+            logging.info("pulled back %s records from database", len(rslt));
 
-                # the 0th elem is created_at
-                # the rest match BOT_KEYS[bot_type]
-                dict_names = ('CreatedAt', ) + BOT_KEYS[bot_type]
-                jstr = list(map( lambda x: dict(zip(dict_names, x)), rslt))
-                logging.info("****Jstr.len", len(rslt));
-                logging.info("****Jstr", rslt);
-
+            # the 0th elem is created_at
+            # the rest match BOT_KEYS[bot_type]
+            dict_names = ('CreatedAt', ) + BOT_KEYS[bot_type]
+            jstr = list(map(lambda x: dict(zip(dict_names, x)), rslt))
+            #logging.info("****Jstr", json.dumps(jstr, cls=MyEncoder));
 
         else:
             jstr = {"message" : "unknown paramater string" }
-
-
-
 
 
 
@@ -267,8 +255,9 @@ def handle_bot(event, context):
 
     return {
         "statusCode": response_code,
-        "body": json.dumps(body),
+        "body": json.dumps(body, cls=MyEncoder),
         "headers": {
             "Content-Type" : "application/json",
         },
     }
+
