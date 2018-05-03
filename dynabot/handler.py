@@ -139,11 +139,15 @@ def get_call(bot_type, jsonstr):
             if len(rslt) > 0:
                 r_CreatedAt = rslt[0]['CreatedAt']
                 r_deviceid = rslt[0]['Id']  # todo trim this later
+
+
+            # trims off the bottype from Id
+            if len(r_deviceid) > 0:
+                r_deviceid = '-'.join(r_deviceid.split('-')[1:])
            
             jstr = {"count" : nrow,
                     "deviceid": r_deviceid,
-                    "CreatedAt": r_CreatedAt,
-                    "TODO": "trim off bottype"}
+                    "CreatedAt": r_CreatedAt}
             rc = 200
 
         elif 'deviceid' in jsonstr.keys():
