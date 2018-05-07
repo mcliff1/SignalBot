@@ -10,6 +10,7 @@ In addition the *pyapi.py* utility can maintain a list of endpoints for POST/GET
 
 ### Contents
 * [Architecture](#architecture)
+* [REACT](#REACT)
 * [REST API](#api)
 * [GraphQL](#graphql)
 * [Install](#install--set-up-workstation)
@@ -35,6 +36,11 @@ The simplify implementation we will leverage the CloudFormation templates in the
 The DynamoDB implementation is truly serverless, the user does NOT need to have a VPC defined to use this.
 
 The Lambda function connects to a DynamoDB table, the REST interface does not change.
+
+
+## REACT
+
+The **static** folder contains *NodeJS* files for the *REACT* framework to provide static graphs and interface to the API.
 
 
 ## API
