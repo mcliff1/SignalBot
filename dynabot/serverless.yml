@@ -36,14 +36,6 @@ provider:
             - ":table/"
             - Ref: DynaBotDB
             - "*"
-    - Effect: Allow
-      Action:
-        - dynamodb:CreateTable
-      Resource: "arn:aws:dynamodb:*:*:*"
-    - Effect: Allow
-      Action:
-        - apigateway:POST
-      Resource: "arn:aws:apigateway:*::*"
 
 
 functions:
