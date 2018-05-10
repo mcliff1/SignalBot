@@ -1,0 +1,116 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Constructs the IAM Role necessary to deploy the serverless.yml file",
+	"Parameters" : {
+		"Project" : {
+			"Description" : "Project Name",
+			"Type" : "String",
+			"Default" : "IAM Role for SLS Workstation"
+		},
+		"Ec2Stack" : {
+			"Description" : "EC2 Stack",
+			"Type" : "String",
+			"Default" : "StackName that created the EC2 SLS workstation"
+		}
+	},
+	"Resources" : {
+
+
+		"SLSRole": {
+			"Type" : "AWS::IAM::Role",
+			"Properties" : {
+				"AssumeRolePolicyDocument" : {
+					"Version" : "2012-10-17",
+					"Statement" : [ {
+						"Effect" : "Allow",
+						"Principal" : {
+							"Service" : [ "ec2.amazonaws.com" ]
+						},
+						"Action" : [ "sts:AssumeRole" ]
+						} ]
+					},
+					"Path" : "/",
+					"Policies" : [
+						{
+							"PolicyName" : "sls-iam-instance-policy",
+							"PolicyDocument": {
+								"Version" : "2012-10-17",
+								"Statement" : [
+									{
+										"Action" : [
+											"route53:*",
+											"lambda:*",
+											"dynamodb:*",
+											"cloudformation:*",
+											"logs:*",
+											"iam:*",
+											"s3:*",
+											"apigateway:*",
+										],
+										"Resource" : "*",
+										"Effect" : "Allow"
+									},
+									{
+										"Action" : [
+											"s3:*"
+										],
+										"Resource" : "arn:aws:s3:::dynabot*",
+										"Effect" : "Allow"
+									},
+									{
+										"Action" : [
+											"dynamodb:*"
+										],
+										"Resource" : "arn:aws:dynamodb:::table/dynabot*",
+										"Effect" : "Allow"
+									},
+									{
+										"Action" : [
+											"apigateway:*"
+										],
+										"Resource" : "arn:aws:apigateway:::/restapis*",
+										"Effect" : "Allow"
+									}
+
+								]
+							}
+						}
+					]
+				}
+			}
+		},
+
+		"InstanceProfile": {
+				"Type" : "AWS::IAM::InstanceProfile",
+				"Properties" : {
+					"Path" : "/",
+					"Roles" : [
+						{ "Ref" : "SLSRole" }
+					]
+				}
+		}
+
+
+
+	},
+	"Metadata": {
+			"AWS::CloudFormation::Interface" : {
+				"ParameterGroups" : [
+					{
+						"Label" : { "default" : "Project Information"},
+						"Parameters" : [ "Project" ]
+					}
+				],
+				"ParameterLabels" : {
+				}
+			}
+	},
+	"Outputs": {
+			"ProfileArn" : {
+				"Description" : "Profile ARN",
+				"Value" : { "Fn::GetAtt" : ["InstanceProfile", "Arn"] },
+				"Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-ProfileArn"}}
+			}
+	}
+
+}
