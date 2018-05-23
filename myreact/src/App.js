@@ -6,6 +6,7 @@ import ReactJson from 'react-json-view';
 import { JsonEditor } from 'react-json-edit';
 import { render } from 'react-dom';
 import { Chart } from 'react-google-charts';
+import BotChart from './BotChart.js';
 
 
 var mydata = [
@@ -25,12 +26,6 @@ var colData = [
   { type: 'number', label: 'Temp' }
 ];
 
-var rowData = [
-  [new Date('2018-04-25'),79.6], [new Date('2018-04-26'), 57.5], [new Date('2018-04-27'), 79.6]
-];
-var rowData2 = [
-  [new Date('2018-04-25 12:34:12'),79.6], [new Date('2018-04-26 12:34:12'), 57.5], [new Date('2018-04-27 12:34:12'), 79.6]
-];
 
 
 
@@ -51,7 +46,7 @@ class MyChart extends React.Component {
     fetch('https://1ujflj28sk.execute-api.us-west-2.amazonaws.com/dev/api/metrics/soil?deviceid=1600aaaaffff0061')
     .then( function(resp) {return resp.json(); })
     .then( function(resp_data) {
-    
+
       var graphData = resp_data.map(item => [new Date(item.CreatedAt), item.tempf]);
       currentComponent.setState({data: graphData});
 
@@ -90,7 +85,6 @@ class EditDataPane extends React.Component {
   };
 
   render() {
-    let data = this.props.data;
     return (
       <div>
         <JsonEditor value={this.state.json} propagateChanges={this.callback} />
@@ -139,6 +133,8 @@ class App extends Component {
           Please To get started, edit <code>src/App.js</code> and save to reload.
         </p>
         <MyChart data={graphData} />
+        <hr />
+        <BotChart data={graphData} />
         <hr />
         <DataPane data={graphData} />
       </div>
