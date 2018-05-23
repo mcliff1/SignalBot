@@ -1,0 +1,85 @@
+swagger: '2.0'
+info:
+  description: >-
+    Signalbot API schema, more information at
+    [SignalBot](http://github.com/mcliff1/SignalBot)
+  version: 1.0.0
+  title: Signal Bot API Schema
+  contact:
+    email: matt@denvercliffs.com
+host: www.cliffconsulting.com
+basePath: /
+tags:
+  - name: bot
+    description: Metrics to post and retrieve
+paths:
+  '/api/metrics/{bottype}':
+    get:
+      tags:
+        - bot
+      summary: retrieves bot data
+      responses:
+        '200':
+          description: operation successful
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Bot'
+        '405':
+          description: Invalid Input
+      parameters:
+        - name: bottype
+          in: path
+          type: string
+          required: true
+          items:
+            type: string
+            enum:
+              - soil
+              - aqua
+              - cure
+              - light
+              - gas
+    post:
+      tags:
+        - bot
+      summary: log a reading for soilbot
+      description: ''
+      operationId: postSoil
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: bottype
+          in: path
+          type: string
+          required: true
+          items:
+            type: string
+            enum:
+              - soil
+              - aqua
+              - cure
+              - light
+              - gas
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Bot'
+      responses:
+        '200':
+          description: operation successful
+        '405':
+          description: Invalid Input
+definitions:
+  Bot:
+    type: object
+    properties:
+      deviceid:
+        type: string
+externalDocs:
+  description: Find out more about SignalBot
+  url: 'https://github.com/mcliff1/SignalBot'
+  
