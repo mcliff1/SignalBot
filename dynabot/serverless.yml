@@ -7,7 +7,10 @@ custom:
   stage: ${opt:stage, self:provider.stage}
   region: ${opt:region, self:provider.region}
   extra: ${file(vars/${self:custom.stage}.yml)}
-  
+
+  # todo - move this out to parameter
+  domainname: mattcliff.net
+  hostname: dynabot-${self:custom:stage}-api
 
 provider:
   name: aws
@@ -25,7 +28,7 @@ provider:
         - dynamodb:GetItem
         - dynamodb:PutItem
         - dynamodb:UpdateItem
-      Resource: 
+      Resource:
         "Fn::Join":
           - ""
           -
@@ -49,7 +52,7 @@ functions:
       - http:
           path: api/metrics/{bottype}
           method: get
-          cors: 
+          cors:
             origin: '*'
             headers:
               - Content-Type
@@ -58,7 +61,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
             allowCredentials: false
-    
+
       - http:
           path: api/metrics/{bottype}
           method: post
@@ -67,6 +70,29 @@ functions:
 
 resources:
   Resources:
+    # this should already exist so no impacts
+    MyHostedZone:
+      Type: AWS::Route53::HostedZone
+      Properties:
+        Name: ${self:custom.domainname}
+
+    ApiGatewayCustomDomain:
+      Type: AWS::ApiGateway::DomainName
+      Properties:
+        DomainName: ${self:custom.hostname}
+
+    MyDNSRecord:
+      Type: AWS::Route53::RecordSetGroup
+      DependsOn: ApiGatewayCustomDomain
+      Properties:
+        HostedZoneId: {Ref: MyHostedZone}
+        RecordSets:
+          - Type: A
+            Name: { "Fn::GetAtt" : ApiGatewayDomain.domainName}
+            AliasTarget:
+                HostedZoneId: Z2FDTNDATAQYW2  # hardcoded for all CloudFront
+                DNSName: { "Fn::GetAtt" : ApiGatewayDomain.distributionDomainName }
+
     DynaBotDB:
       Type: 'AWS::DynamoDB::Table'
       #DeletionPolicy: Retain
@@ -96,16 +122,16 @@ resources:
                 KeyType: HASH
               - AttributeName: CreatedAt
                 KeyType: RANGE
-            Projection: 
+            Projection:
               NonKeyAttributes:
                 - "deviceid"
               ProjectionType: "INCLUDE"
             ProvisionedThroughput: ${self:custom.extra.DynamoCapacity}
-      
+
   Outputs:
     ExportServiceEndpoint:
       Description: "URL Endpoint for the REST Service"
-      Value: 
+      Value:
         "Fn::Join":
           - ""
           -
@@ -117,4 +143,3 @@ resources:
             - ${self:custom.stage}
       Export:
         Name: SLSServiceEndpoint
-
