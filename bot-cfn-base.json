@@ -6,50 +6,250 @@
       "Description" : "Enter Project Name",
       "Type" : "String",
       "Default" : "Bot Serverless Base"
+    },
+    "DomainName" : {
+      "Description" : "Enter Domain Name to Use (must be HostedZone)",
+      "Type" : "String",
+      "Default" : "mydomain.com"
+    },
+    "WebHostName" : {
+      "Description" : "Enter Host Name for the Website",
+      "Type" : "String",
+      "Default" : "bot"
+    },
+    "ApiHostName" : {
+      "Description" : "Enter Host Name for API",
+      "Type" : "String",
+      "Default" : "bot-api"
+    },
+    "TopicName" : {
+      "Description" : "Enter SNS Topic Name",
+      "Type" : "String",
+      "Default" : "bot-sns"
+    },
+    "GitHubSource" : {
+      "Description" : "Enter Source Static Repo for GitHub",
+      "Type" : "String",
+      "Default" : "mcliff1/SignalBot"
+    },
+    "ApiACM" : {
+      "Description" : "ACM for the API (must be created in us-east-1)",
+      "Type" : "String",
+      "Default" : ""
+    },
+    "WebACMArn" : {
+      "Description" : "ACM Arn for the Web (must be created in us-east-1)",
+      "Type" : "String",
+      "Default" : ""
+    }
+  },
+  "Mappings" : {
+    "RegionMap": {
+      "ap-northeast-1": {
+        "S3hostedzoneID": "Z2M4EHUR26P7ZW",
+        "websiteendpoint": "s3-website-ap-northeast-1.amazonaws.com"
+      },
+      "ap-northeast-2": {
+        "S3hostedzoneID": "Z3W03O7B5YMIYP",
+        "websiteendpoint": "s3-website-ap-northeast-2.amazonaws.com"
+      },
+      "ap-south-1": {
+        "S3hostedzoneID": "Z11RGJOFQNVJUP",
+        "websiteendpoint": "s3-website-ap-south-1.amazonaws.com"
+      },
+      "ap-southeast-1": {
+        "S3hostedzoneID": "Z3O0J2DXBE1FTB",
+        "websiteendpoint": "s3-website-ap-southeast-1.amazonaws.com"
+      },
+      "ap-southeast-2": {
+        "S3hostedzoneID": "Z1WCIGYICN2BYD",
+        "websiteendpoint": "s3-website-ap-southeast-2.amazonaws.com"
+      },
+      "eu-central-1": {
+        "S3hostedzoneID": "Z21DNDUVLTQW6Q",
+        "websiteendpoint": "s3-website-eu-central-1.amazonaws.com"
+      },
+      "eu-west-1": {
+        "S3hostedzoneID": "Z1BKCTXD74EZPE",
+        "websiteendpoint": "s3-website-eu-west-1.amazonaws.com"
+      },
+      "sa-east-1": {
+        "S3hostedzoneID": "Z7KQH4QJS55SO",
+        "websiteendpoint": "s3-website-sa-east-1.amazonaws.com"
+      },
+      "us-east-1": {
+        "S3hostedzoneID": "Z3AQBSTGFYJSTF",
+        "websiteendpoint": "s3-website-us-east-1.amazonaws.com"
+      },
+      "us-east-2": {
+        "S3hostedzoneID": "Z2O1EMRO9K5GLX",
+        "websiteendpoint": "s3-website-us-east-2.amazonaws.com"
+      },
+      "us-west-1": {
+        "S3hostedzoneID": "Z2F56UZL2M1ACD",
+        "websiteendpoint": "s3-website-us-west-1.amazonaws.com"
+      },
+      "us-west-2": {
+        "S3hostedzoneID": "Z3BJ6K6RIION7M",
+        "websiteendpoint": "s3-website-us-west-2.amazonaws.com"
+      }
     }
   },
   "Resources": {
-
     "SNSTopic" : {
-       "Type" : "AWS::SNS::Topic",
-       "Properties" : {
-         "TopicName": {"Fn::Sub": "${AWS::StackName}-GeneralTopic" },
-         "DisplayName": {"Fn::Sub" : "General Announcments For ${AWS::StackName} network"}
-       }
-     }
-
-   },
-   "Outputs": {
-     "Project" : {
-       "Description" : "The Project Name",
-       "Value" : {"Ref": "Project"}
-     },
-     "SNSTopic" : {
-       "Description" : "SNS Topic Created",
-       "Value" : {"Ref": "SNSTopic"},
-       "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-TopicArn"}}
-     }
-
-
-
-   },
-
-   "Metadata": {
-     "AWS::CloudFormation::Interface" : {
-       "ParameterGroups" : [
-           {
-             "Label" : { "default" : "Project Information"},
-             "Parameters" : [ "Project" ]
-           }
-         ],
-        "ParameterLabels" : {
-             "PublicSubnetCidrBlock3": { "default" : "Public Subnet 3" }
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "TopicName": "${AWS::StackName}-GeneralTopic",
+        "DisplayName": "General Announcments For ${AWS::StackName} network"
+      }
+    },
+    "UserPool" : {
+      "Type" : "AWS::Cognito::UserPool",
+      "Properties" : {
+        "UsernameAttributes": [ "email" ],
+        "MfaConfiguration": "OFF",
+        "UserPoolName": "${AWS::StackName}-userpool-${self:custom.stage}",
+        "Schema": [
+          {
+            "Name": "email",
+            "AttributeDataType": "String",
+            "Mutable": "false",
+            "Required": "true"
+          }
+        ]
+      }
+    },
+    "UserPoolClient": {
+      "Type" : "AWS::Cognito::UserPoolClient",
+      "Properties" : {
+        "ClientName": "${AWS::StackName}-client-${self:custom.stage}",
+        "ExplicitAuthFlows": [ "ADMIN_NO_SRP_AUTH" ],
+        "GenerateSecret": "False",
+        "UserPoolId": { "Ref" : "UserPool" }
+      }
+    },
+    "BuildBucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "Tags" : [
+          { "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-BuildBucket"]]}},
+          { "Key" : "Project", "Value" : {"Ref": "Project"} }
+        ]
+      }
+    },
+    "WebBucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "Tags" : [
+          { "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-WebBucket"]]}},
+          { "Key" : "Project", "Value" : {"Ref": "Project"} }
+        ]
+      }
+    },
+    "WebBucketPolicy" : {
+      "Type" : "AWS::S3::BucketPolicy",
+      "Properties" : {
+        "PolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement" : {
+            "Action" : "S3:GetObject",
+            "Resource" : { "Fn::Join" : [ "", ["arn:aws:s3:::", { "Ref" : "WebBucket"}, "/*"]] },
+            "Effect" : "Allow"
+          }
         }
       }
+    },
+    "WebCDN" : {
+      "Type" : "AWS::CloudFront::Distribution",
+      "Properties" : {
+        "DistributionConfig" : {
+          "ViewerCertificate" : {
+            "AcmCertificateArn" : { "Ref" : "WebACMArn" },
+            "SslSupportMethod" : "sni-only"
+          },
+          "Enabled" : "true",
+          "HttpVersion" : "http2",
+          "Aliases" : [
+          ],
+          "DefaultRootObject" : "index.html",
+          "Origins" : [
+            {
+              "DomainName" : { "Fn::Join" : [ "." ,
+                [ { "Ref" : "WebBucket"}, {"Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region"}, "websiteendpoint"] }]]},
+                "Id" : "S3Origin",
+                "CustomOriginConfig" : {
+                  "HTTPPort" : "80",
+                  "HTTPSPort" : "443"
+                }
+              }
+            ],
+            "DefaultCacheBehavior" : {
+              "ViewerProtocolPolicy" : "allow-all",
+              "TargetOriginId" : "S3Origin",
+              "AllowedMethods" : [ "GET", "HEAD" ],
+              "Compress" : "true",
+              "DefaultTTL" : "30",
+              "MinTTL" : "10",
+              "ForwardedValues" : {
+                "QueryString" : "true"
+              }
+            }
+          }
+        }
+      }
+  },
+  "Outputs": {
+    "Project" : {
+        "Description" : "The Project Name",
+        "Value" : {"Ref": "Project"}
+      },
+    "SNSTopic" : {
+        "Description" : "SNS Topic Created",
+        "Value" : {"Ref": "SNSTopic"},
+        "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-TopicArn"}}
+      },
+    "DomainName" : {
+        "Description" : "DomainName",
+        "Value" : {"Ref": "DomainName"},
+        "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-DomainName"}}
+      },
+    "ApiHostName" : {
+        "Description" : "Hostname for the API",
+        "Value" : {"Ref": "ApiHostName"},
+        "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-ApiHostName"}}
+      },
+    "WebHostName" : {
+        "Description" : "Hostname for the API",
+        "Value" : {"Ref": "WebHostName"},
+        "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-WebHostName"}}
+      },
+    "ApiACM" : {
+        "Description" : "ACM to use for API",
+        "Value" : {"Ref": "ApiACM"},
+        "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-ApiACM"}}
+      },
+    "CognitoUserPoolId" : {
+        "Description" : "User Pool from Cognito",
+        "Value" : {"Ref": "SNSTopic"},
+        "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-CognitoUserPoolId"}}
+      },
+    "CognitoClientId" : {
+      "Description" : "Client Id from Cognito",
+      "Value" : {"Ref": "SNSTopic"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-CognitoClientId"}}
     }
-
-
-
-  // TODO - add S3 bucket
-  cognito ... model after ~/aws/slsweb and others
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Project Information"},
+          "Parameters" : [ "Project" ]
+        }
+      ],
+      "ParameterLabels" : {
+        "ApiHostName": { "default" : "Hostname (not include domain) for the API" }
+      }
+    }
+  }
 }
