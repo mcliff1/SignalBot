@@ -99,8 +99,8 @@
     "SNSTopic" : {
       "Type" : "AWS::SNS::Topic",
       "Properties" : {
-        "TopicName": "${AWS::StackName}-GeneralTopic",
-        "DisplayName": "General Announcments For ${AWS::StackName} network"
+        "TopicName": { "Fn::Sub" : "${AWS::StackName}-GeneralTopic" },
+        "DisplayName": { "Fn::Sub" :"General Announcments For ${AWS::StackName} network"}
       }
     },
     "UserPool" : {
@@ -108,7 +108,7 @@
       "Properties" : {
         "UsernameAttributes": [ "email" ],
         "MfaConfiguration": "OFF",
-        "UserPoolName": "${AWS::StackName}-userpool-${self:custom.stage}",
+        "UserPoolName": { "Fn::Sub" : "${AWS::StackName}-userpool"},
         "Schema": [
           {
             "Name": "email",
@@ -122,7 +122,7 @@
     "UserPoolClient": {
       "Type" : "AWS::Cognito::UserPoolClient",
       "Properties" : {
-        "ClientName": "${AWS::StackName}-client-${self:custom.stage}",
+        "ClientName": {"Fn::Sub" : "${AWS::StackName}-client"},
         "ExplicitAuthFlows": [ "ADMIN_NO_SRP_AUTH" ],
         "GenerateSecret": "False",
         "UserPoolId": { "Ref" : "UserPool" }
@@ -149,11 +149,13 @@
     "WebBucketPolicy" : {
       "Type" : "AWS::S3::BucketPolicy",
       "Properties" : {
+        "Bucket" : { "Ref" : "WebBucket" },
         "PolicyDocument": {
           "Version" : "2012-10-17",
           "Statement" : {
             "Action" : "S3:GetObject",
             "Resource" : { "Fn::Join" : [ "", ["arn:aws:s3:::", { "Ref" : "WebBucket"}, "/*"]] },
+            "Principal" : "*", 
             "Effect" : "Allow"
           }
         }
@@ -169,21 +171,21 @@
           },
           "Enabled" : "true",
           "HttpVersion" : "http2",
-          "Aliases" : [
-          ],
+          "Aliases" : [ {"Fn::Join": [".", [ {"Ref": "WebHostName"}, {"Ref": "DomainName"}]]} ],
           "DefaultRootObject" : "index.html",
           "Origins" : [
             {
               "DomainName" : { "Fn::Join" : [ "." ,
                 [ { "Ref" : "WebBucket"}, {"Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region"}, "websiteendpoint"] }]]},
-                "Id" : "S3Origin",
-                "CustomOriginConfig" : {
-                  "HTTPPort" : "80",
-                  "HTTPSPort" : "443"
-                }
+              "Id" : "S3Origin",
+              "CustomOriginConfig" : {
+                "HTTPPort" : "80",
+                "HTTPSPort" : "443",
+                "OriginProtocolPolicy" : "http-only"
               }
-            ],
-            "DefaultCacheBehavior" : {
+            }
+          ],
+          "DefaultCacheBehavior" : {
               "ViewerProtocolPolicy" : "allow-all",
               "TargetOriginId" : "S3Origin",
               "AllowedMethods" : [ "GET", "HEAD" ],
@@ -194,9 +196,22 @@
                 "QueryString" : "true"
               }
             }
-          }
         }
       }
+    },
+    "WebDNS" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "Comment": "SSL URL for Project",
+        "Type" : "A",
+        "HostedZoneName" : { "Fn::Join" : [ "", [ {"Ref" : "DomainName"}, "."]]},
+        "Name": { "Fn::Join" : [ "", [ {"Ref" :"WebHostName"}, ".", {"Ref" : "DomainName"}, "."]]},
+        "AliasTarget" : {
+          "HostedZoneId" : "Z2FDTNDATAQYW2",
+          "DNSName" : { "Fn::GetAtt" : [ "WebCDN" , "DomainName"]}
+        }
+      }
+    }
   },
   "Outputs": {
     "Project" : {
@@ -245,6 +260,14 @@
         {
           "Label" : { "default" : "Project Information"},
           "Parameters" : [ "Project" ]
+        },
+        {
+          "Label" : { "default" : "Hostnames and DNS"},
+          "Parameters" : [ "DomainName", "WebHostName", "ApiHostName"]
+        },
+        {
+          "Label" : { "default" : "SSL Certificates (precreated)"},
+          "Parameters" : [ "ApiACM", "WebACMArn"]
         }
       ],
       "ParameterLabels" : {
