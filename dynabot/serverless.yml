@@ -161,6 +161,6 @@ resources:
     ExportDummy:
       Description: "show we can pull from other cfn"
       Value:
-        "Fn::ImportValue": ""${self:custom.base}-TopicArn"
+        "Fn::ImportValue": "${self:custom.basestack}-TopicArn"
       Export:
         Name: ExportDummyDum
