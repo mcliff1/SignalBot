@@ -8,6 +8,10 @@ custom:
   region: ${opt:region, self:provider.region}
   extra: ${file(vars/${self:custom.stage}.yml)}
 
+  # this is the name of the stack to pull outputs from
+  basestack: tmsbase
+
+
   # todo - move this out to parameter
   domainname: mattcliff.net
   hostname: dynabot-${self:custom.stage}-api
@@ -154,3 +158,9 @@ resources:
             - ${self:custom.stage}
       Export:
         Name: SLSServiceEndpoint
+    ExportDummy:
+      Description: "show we can pull from other cfn"
+      Value:
+        "Fn::ImportValue": "${self:custom.basestack}-TopicArn"
+      Export:
+        Name: ExportDummyDum
