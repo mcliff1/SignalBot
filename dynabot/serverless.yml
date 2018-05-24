@@ -10,7 +10,9 @@ custom:
 
   # todo - move this out to parameter
   domainname: mattcliff.net
-  hostname: dynabot-${self:custom:stage}-api
+  hostname: dynabot-${self:custom.stage}-api
+  acmarn: arn:aws:acm:us-east-1:220065781146:certificate/d2c22aed-bad2-4ea4-89f4-9b6528a1caf6
+  hostedzoneid: ZFZ7ZR29LN62M
 
 provider:
   name: aws
@@ -71,27 +73,36 @@ functions:
 resources:
   Resources:
     # this should already exist so no impacts
-    MyHostedZone:
-      Type: AWS::Route53::HostedZone
-      Properties:
-        Name: ${self:custom.domainname}
+    #MyHostedZone:
+    #  Type: AWS::Route53::HostedZone
+    #  Properties:
+    #    Name: ${self:custom.domainname}
 
-    ApiGatewayCustomDomain:
+    ApiGatewayDomain:
       Type: AWS::ApiGateway::DomainName
       Properties:
-        DomainName: ${self:custom.hostname}
+        DomainName: ${self:custom.hostname}.${self:custom.domainname}
+        CertificateArn: ${self:custom.acmarn}
+
+
+    ApiGatewayMapping:
+      Type: AWS::ApiGateway::BasePathMapping
+      DependsOn: ApiGatewayDomain
+      Properties:
+        DomainName: { "Ref" : ApiGatewayDomain }
+        RestApiId: { "Ref" : ApiGatewayRestApi }
 
     MyDNSRecord:
       Type: AWS::Route53::RecordSetGroup
-      DependsOn: ApiGatewayCustomDomain
+      DependsOn: ApiGatewayDomain
       Properties:
-        HostedZoneId: {Ref: MyHostedZone}
+        HostedZoneId: ${self:custom.hostedzoneid}
         RecordSets:
           - Type: A
-            Name: { "Fn::GetAtt" : ApiGatewayDomain.domainName}
+            Name: ${self:custom.hostname}.${self:custom.domainname}
             AliasTarget:
                 HostedZoneId: Z2FDTNDATAQYW2  # hardcoded for all CloudFront
-                DNSName: { "Fn::GetAtt" : ApiGatewayDomain.distributionDomainName }
+                DNSName: { "Fn::GetAtt" : ApiGatewayDomain.DistributionDomainName }
 
     DynaBotDB:
       Type: 'AWS::DynamoDB::Table'
