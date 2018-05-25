@@ -32,13 +32,13 @@
       "Type" : "String",
       "Default" : "mcliff1/SignalBot"
     },
-    "ApiACM" : {
-      "Description" : "ACM for the API (must be created in us-east-1)",
+    "ApiACMArn" : {
+      "Description" : "ARN for the API ACM (must be created in us-east-1)",
       "Type" : "String",
       "Default" : ""
     },
     "WebACMArn" : {
-      "Description" : "ACM Arn for the Web (must be created in us-east-1)",
+      "Description" : "ARN for the Web ACM (must be created in us-east-1)",
       "Type" : "String",
       "Default" : ""
     }
@@ -211,47 +211,77 @@
           "DNSName" : { "Fn::GetAtt" : [ "WebCDN" , "DomainName"]}
         }
       }
+    },
+    "ssmDomainName": {
+      "Type" : "AWS::SSM::Parameter",
+      "Properties" : {
+        "Name" : "/bot/domainName",
+        "Description" : "Domain Name",
+        "Type" : "String",
+        "Value" : { "Ref" : "DomainName" },
+      }
+    },
+    "ssmApiHostName": {
+      "Type" : "AWS::SSM::Parameter",
+      "Properties" : {
+        "Name" : "/bot/apiHostName",
+        "Description" : "API Host Name",
+        "Type" : "String",
+        "Value" : { "Ref" : "ApiHostName" },
+      }
+    },
+    "ssmApiAcmArn": {
+      "Type" : "AWS::SSM::Parameter",
+      "Properties" : {
+        "Name" : "/bot/apiAcmArn",
+        "Description" : "ARN for the ACM (Certificate) for the API",
+        "Type" : "String",
+        "Value" : { "Ref" : "ApiACMArn" },
+      }
+    },
+    "ssmCognitoUserPoolId": {
+      "Type" : "AWS::SSM::Parameter",
+      "Properties" : {
+        "Name" : "/bot/cognitoUserPoolId",
+        "Description" : "User Pool from Cognito",
+        "Value" : {"Ref": "UserPool"},
+        "Type" : "String",
+      }
+    },
+    "ssmCognitoClientId": {
+      "Type" : "AWS::SSM::Parameter",
+      "Properties" : {
+        "Name" : "/bot/cognitoClientId",
+        "Type" : "String",
+        "Description" : "Client Id from Cognito",
+        "Value" : {"Ref": "UserPoolClient"}
+      }
     }
   },
   "Outputs": {
     "Project" : {
-        "Description" : "The Project Name",
-        "Value" : {"Ref": "Project"}
-      },
+      "Description" : "The Project Name",
+      "Value" : {"Ref": "Project"}
+    },
     "SNSTopic" : {
         "Description" : "SNS Topic Created",
         "Value" : {"Ref": "SNSTopic"},
         "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-TopicArn"}}
       },
     "DomainName" : {
-        "Description" : "DomainName",
-        "Value" : {"Ref": "DomainName"},
-        "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-DomainName"}}
-      },
+      "Description" : "DomainName",
+      "Value" : {"Ref": "DomainName"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-DomainName"}}
+    },
     "ApiHostName" : {
-        "Description" : "Hostname for the API",
-        "Value" : {"Ref": "ApiHostName"},
-        "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-ApiHostName"}}
-      },
+      "Description" : "Hostname for the API",
+      "Value" : {"Ref": "ApiHostName"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-ApiHostName"}}
+    },
     "WebHostName" : {
-        "Description" : "Hostname for the API",
-        "Value" : {"Ref": "WebHostName"},
-        "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-WebHostName"}}
-      },
-    "ApiACM" : {
-        "Description" : "ACM to use for API",
-        "Value" : {"Ref": "ApiACM"},
-        "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-ApiACM"}}
-      },
-    "CognitoUserPoolId" : {
-        "Description" : "User Pool from Cognito",
-        "Value" : {"Ref": "UserPoolClient"},
-        "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-CognitoUserPoolId"}}
-      },
-    "CognitoClientId" : {
-      "Description" : "Client Id from Cognito",
-      "Value" : {"Ref": "UserPool"},
-      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-CognitoClientId"}}
+      "Description" : "Hostname for the API",
+      "Value" : {"Ref": "WebHostName"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-WebHostName"}}
     }
   },
   "Metadata": {
