@@ -155,7 +155,7 @@
           "Statement" : {
             "Action" : "S3:GetObject",
             "Resource" : { "Fn::Join" : [ "", ["arn:aws:s3:::", { "Ref" : "WebBucket"}, "/*"]] },
-            "Principal" : "*", 
+            "Principal" : "*",
             "Effect" : "Allow"
           }
         }
@@ -245,12 +245,12 @@
       },
     "CognitoUserPoolId" : {
         "Description" : "User Pool from Cognito",
-        "Value" : {"Ref": "SNSTopic"},
+        "Value" : {"Ref": "UserPoolClient"},
         "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-CognitoUserPoolId"}}
       },
     "CognitoClientId" : {
       "Description" : "Client Id from Cognito",
-      "Value" : {"Ref": "SNSTopic"},
+      "Value" : {"Ref": "UserPool"},
       "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-CognitoClientId"}}
     }
   },
