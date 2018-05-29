@@ -143,7 +143,25 @@
         "Tags" : [
           { "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-WebBucket"]]}},
           { "Key" : "Project", "Value" : {"Ref": "Project"} }
-        ]
+        ],
+        "CorsConfiguration" : {
+          "CorsRules" : [
+            {
+              "AllowedMethdods" : [ "GET" ],
+              "AllowedOrigins" : [ "*" ],
+              "Id" : "corsRuleGet"
+            },
+            {
+              "AllowedMethdods" : [ "POST", "PUT", "DELETE" ],
+              "AllowedOrigins" : [ "*" ],
+              "Id" : "corsRuleModify"
+            }
+          ]
+        },
+        "WebSiteConfiguration" : {
+          "IndexDocument" : "index.html",
+          "ErrorDocument" : "index.html"
+        }
       }
     },
     "WebBucketPolicy" : {
@@ -186,16 +204,33 @@
             }
           ],
           "DefaultCacheBehavior" : {
-              "ViewerProtocolPolicy" : "allow-all",
-              "TargetOriginId" : "S3Origin",
-              "AllowedMethods" : [ "GET", "HEAD" ],
-              "Compress" : "true",
-              "DefaultTTL" : "30",
-              "MinTTL" : "10",
-              "ForwardedValues" : {
-                "QueryString" : "true"
-              }
+            "ViewerProtocolPolicy" : "allow-all",
+            "TargetOriginId" : "S3Origin",
+            "AllowedMethods" : [ "GET", "HEAD" ],
+            "Compress" : "true",
+            "DefaultTTL" : "30",
+            "MinTTL" : "10",
+            "ForwardedValues" : {
+              "QueryString" : "true",
+              "Headers" : [
+                "Access-Control-Request-Headers",
+                "Access-Control-Request-Method",
+                "Origin"
+              ]
             }
+          },
+          "CustomErrorResponses" : [
+            {
+              "ErrorCode" : 404,
+              "ResponseCode" : 200,
+              "ResponsePagePath" : "/index.html"
+            },
+            {
+              "ErrorCode" : 403,
+              "ResponseCode" : 200,
+              "ResponsePagePath" : "/index.html"
+            }
+          ]
         }
       }
     },
@@ -215,7 +250,7 @@
     "ssmDomainName": {
       "Type" : "AWS::SSM::Parameter",
       "Properties" : {
-        "Name" : "/bot/domainName",
+        "Name" : { "Fn::Sub" : "/${AWS::StackName}/domainName"},
         "Description" : "Domain Name",
         "Type" : "String",
         "Value" : { "Ref" : "DomainName" },
@@ -224,8 +259,8 @@
     "ssmApiHostName": {
       "Type" : "AWS::SSM::Parameter",
       "Properties" : {
-        "Name" : "/bot/apiHostName",
         "Description" : "API Host Name",
+        "Name" : { "Fn::Sub" : "/${AWS::StackName}/apiHostName"},
         "Type" : "String",
         "Value" : { "Ref" : "ApiHostName" },
       }
@@ -233,7 +268,7 @@
     "ssmApiAcmArn": {
       "Type" : "AWS::SSM::Parameter",
       "Properties" : {
-        "Name" : "/bot/apiAcmArn",
+        "Name" : { "Fn::Sub" : "/${AWS::StackName}/apiAcmArn"},
         "Description" : "ARN for the ACM (Certificate) for the API",
         "Type" : "String",
         "Value" : { "Ref" : "ApiACMArn" },
@@ -242,7 +277,7 @@
     "ssmCognitoUserPoolId": {
       "Type" : "AWS::SSM::Parameter",
       "Properties" : {
-        "Name" : "/bot/cognitoUserPoolId",
+        "Name" : { "Fn::Sub" : "/${AWS::StackName}/cognitoUserPoolId"},
         "Description" : "User Pool from Cognito",
         "Value" : {"Ref": "UserPool"},
         "Type" : "String",
@@ -251,10 +286,19 @@
     "ssmCognitoClientId": {
       "Type" : "AWS::SSM::Parameter",
       "Properties" : {
-        "Name" : "/bot/cognitoClientId",
+        "Name" : { "Fn::Sub" : "/${AWS::StackName}/cognitoClientId"},
         "Type" : "String",
         "Description" : "Client Id from Cognito",
         "Value" : {"Ref": "UserPoolClient"}
+      }
+    },
+    "ssmWebBucketName": {
+      "Type" : "AWS::SSM::Parameter",
+      "Properties" : {
+        "Name" : { "Fn::Sub" : "/${AWS::StackName}/webBucketName"},
+        "Type" : "String",
+        "Description" : "Name of the S3 Web Bucket",
+        "Value" : {"Ref": "WebBucket"}
       }
     }
   },
@@ -296,12 +340,15 @@
           "Parameters" : [ "DomainName", "WebHostName", "ApiHostName"]
         },
         {
-          "Label" : { "default" : "SSL Certificates (precreated)"},
-          "Parameters" : [ "ApiACM", "WebACMArn"]
+          "Label" : { "default" : "SSL Certificates (pre-created)"},
+          "Parameters" : [ "ApiACMArn", "WebACMArn"]
         }
       ],
       "ParameterLabels" : {
-        "ApiHostName": { "default" : "Hostname (not include domain) for the API" }
+        "ApiHostName": { "default" : "Hostname (not include domain) for the API" },
+        "WebHostName": { "default" : "Hostname (not include domain) for the Web" },
+        "ApiACMArn": { "default" : "ARN for the SSL certificate to use for the API" },
+        "WebACMArn": { "default" : "ARN for the SSL certificate to use for the Web" }
       }
     }
   }
