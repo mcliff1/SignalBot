@@ -116,6 +116,17 @@ Inbound JSON data string
 
   You can run the Cloud Formation templates either from a CLI, or the AWS console.
 
+ Prerequistes
+ * create ACM (in us-east-1) for both the web and api
+ * domainname must exist in hosted Zone
+
+Run the [bot-cfn-base.json](https://github.com/mcliff1/SignalBot/blob/master/bot-cfn-base.json) template (ideally from the console); this will create S3 buckets, Cognito Pool, and set some properties in *SSM* that the serverless files will expect to use.
+
+Next, create a SLS workstation, and deploy the serverless components (the workstation is created because need to run the *NodeJS* commands and need appropriate system permissions)
+
+
+
+
 
 ### SLS Workstation
   This server will be able to deploy SLS scripts.
