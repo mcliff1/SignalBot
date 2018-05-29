@@ -59,6 +59,7 @@ def main(bot_list):
     #parser.add_argument('-d', '--data', help='JSON formatted string to pass in')
     #parser.add_argument('-v', '--verbose', action="store_true", help='shows full output')
     URLS = {
+       'api' : "https://bot-api.mattcliff.net/dev/api/metrics/",
        'rds' : "https://vwqqwu30m0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/",
        'ddb' : "https://1ujflj28sk.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
     }
