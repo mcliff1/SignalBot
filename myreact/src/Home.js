@@ -1,5 +1,12 @@
 import React, { Component } from 'react';
+import logo from './logo.svg';
+import './App.css';
+import { ObjectInspector, TableInspector } from 'react-inspector';
+import ReactJson from 'react-json-view';
+import { JsonEditor } from 'react-json-edit';
+import { render } from 'react-dom';
 import { Chart } from 'react-google-charts';
+import BotChart from './BotChart.js';
 
 
 var mydata = [
@@ -19,30 +26,24 @@ var colData = [
   { type: 'number', label: 'Temp' }
 ];
 
-var rowData = [
-  [new Date('2018-04-25'),79.6], [new Date('2018-04-26'), 57.5], [new Date('2018-04-27'), 79.6]
-];
-var rowData2 = [
-  [new Date('2018-04-25 12:34:12'),79.6], [new Date('2018-04-26 12:34:12'), 57.5], [new Date('2018-04-27 12:34:12'), 79.6]
-];
 
 
 
-class BotChart extends React.Component {
+class MyChart extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       columns: colData,
-      data: rowData2
+      data: this.props.data
     }
   }
 
 
-  componentWillMount1() {
+  componentWillMount() {
     let currentComponent = this;
     console.log('called willmount');
 
-    fetch('https://bot-api.mattcliff.net/dev/api/metrics/soil?deviceid=1600aaaaffff0061')
+    fetch('https://1ujflj28sk.execute-api.us-west-2.amazonaws.com/dev/api/metrics/soil?deviceid=1600aaaaffff0061')
     .then( function(resp) {return resp.json(); })
     .then( function(resp_data) {
 
@@ -71,6 +72,68 @@ class BotChart extends React.Component {
 
 }
 
+class EditDataPane extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      json: this.props.data
+    }
+  }
+
+  callback = (changes) => {
+    this.setState({json: changes});
+  };
+
+  render() {
+    return (
+      <div>
+        <JsonEditor value={this.state.json} propagateChanges={this.callback} />
+      </div>
+  )};
+}
+
+class DataPane extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      myData: [ ]
+    };
+  }
 
 
-export default BotChart;
+
+  render() {
+    let data = this.props.data;
+    return (
+      <div>
+        <h3>Here is where we will put the data</h3>
+        <p>JSON - ZZ</p>
+        <div>
+          <ReactJson src={this.state.myData} collapsed="true"/>
+        </div>
+      </div>
+  )};
+}
+
+
+class Home extends Component {
+  render() {
+
+    var graphData = mydata.map(item => [new Date(item.CreatedAt), item.tempf]);
+
+
+
+    return (
+      <div className="App">
+        <h2>myreact landing page</h2>
+        <MyChart data={graphData} />
+        <hr />
+        <BotChart data={graphData} />
+        <hr />
+        <DataPane data={graphData} />
+      </div>
+    );
+  }
+}
+
+export default Home;

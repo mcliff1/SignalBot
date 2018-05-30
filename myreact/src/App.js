@@ -7,6 +7,7 @@ import { JsonEditor } from 'react-json-edit';
 import { render } from 'react-dom';
 import { Chart } from 'react-google-charts';
 import BotChart from './BotChart.js';
+import Home from './Home.js';
 
 
 var mydata = [
@@ -72,71 +73,20 @@ class MyChart extends React.Component {
 
 }
 
-class EditDataPane extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      json: this.props.data
-    }
-  }
-
-  callback = (changes) => {
-    this.setState({json: changes});
-  };
-
-  render() {
-    return (
-      <div>
-        <JsonEditor value={this.state.json} propagateChanges={this.callback} />
-      </div>
-  )};
-}
-
-class DataPane extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      myData: [ ]
-    };
-  }
-
-
-
-  render() {
-    let data = this.props.data;
-    return (
-      <div>
-        <h3>Here is where we will put the data</h3>
-        <p>JSON - ZZ</p>
-        <div>
-          <ReactJson src={this.state.myData} collapsed="true"/>
-        </div>
-      </div>
-  )};
-}
-
 
 class App extends Component {
   render() {
 
-    var graphData = mydata.map(item => [new Date(item.CreatedAt), item.tempf]);
-
-
+    const graphData = mydata.map(item => [new Date(item.CreatedAt), item.tempf]);
 
     return (
       <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          Please To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
+        <h2>myreact landing page</h2>
         <MyChart data={graphData} />
         <hr />
         <BotChart data={graphData} />
+        <Home />
         <hr />
-        <DataPane data={graphData} />
       </div>
     );
   }
