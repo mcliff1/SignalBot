@@ -147,18 +147,18 @@
         "CorsConfiguration" : {
           "CorsRules" : [
             {
-              "AllowedMethdods" : [ "GET" ],
+              "AllowedMethods" : [ "GET" ],
               "AllowedOrigins" : [ "*" ],
               "Id" : "corsRuleGet"
             },
             {
-              "AllowedMethdods" : [ "POST", "PUT", "DELETE" ],
+              "AllowedMethods" : [ "POST", "PUT", "DELETE" ],
               "AllowedOrigins" : [ "*" ],
               "Id" : "corsRuleModify"
             }
           ]
         },
-        "WebSiteConfiguration" : {
+        "WebsiteConfiguration" : {
           "IndexDocument" : "index.html",
           "ErrorDocument" : "index.html"
         }
