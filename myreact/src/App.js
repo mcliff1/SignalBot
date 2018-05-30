@@ -82,11 +82,8 @@ class App extends Component {
     return (
       <div className="App">
         <h2>myreact landing page</h2>
-        <MyChart data={graphData} /> bo
         <hr />
-        <BotChart data={graphData} />
         <Home />
-        <hr />
       </div>
     );
   }

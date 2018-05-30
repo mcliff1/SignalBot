@@ -1,6 +1,4 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
 import { ObjectInspector, TableInspector } from 'react-inspector';
 import ReactJson from 'react-json-view';
 import { JsonEditor } from 'react-json-edit';
