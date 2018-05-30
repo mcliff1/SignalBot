@@ -9,9 +9,9 @@ custom:
   extra: ${file(vars/${self:custom.stage}.yml)}
   basestackname: botbase
 
-  domainname: ${ssm:/${self.custom.basestackname}/domainName}
-  hostname: ${ssm:/${self.custom.basestackname}/apiHostName}
-  acmarn: ${ssm:/${self.custom.basestackname}/apiAcmArn}
+  domainname: ${ssm:/${self:custom.basestackname}/domainName}
+  hostname: ${ssm:/${self:custom.basestackname}/apiHostName}
+  acmarn: ${ssm:/${self:custom.basestackname}/apiAcmArn}
 
 provider:
   name: aws
