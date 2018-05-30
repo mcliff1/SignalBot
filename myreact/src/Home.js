@@ -39,7 +39,7 @@ class MyChart extends React.Component {
   }
 
 
-  componentWillMount() {
+  componentWillMount1() {
     let currentComponent = this;
     console.log('called willmount');
 

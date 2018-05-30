@@ -33,7 +33,7 @@ class BotChart extends React.Component {
     super(props);
     this.state = {
       columns: colData,
-      data: rowData2
+      data: this.props.data
     }
   }
 

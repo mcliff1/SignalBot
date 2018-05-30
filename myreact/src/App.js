@@ -40,7 +40,7 @@ class MyChart extends React.Component {
   }
 
 
-  componentWillMount() {
+  componentWillMount1() {
     let currentComponent = this;
     console.log('called willmount');
 
@@ -82,7 +82,7 @@ class App extends Component {
     return (
       <div className="App">
         <h2>myreact landing page</h2>
-        <MyChart data={graphData} />
+        <MyChart data={graphData} /> bo
         <hr />
         <BotChart data={graphData} />
         <Home />
