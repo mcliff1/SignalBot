@@ -56,6 +56,7 @@ class BotChart extends React.Component {
   render() {
     return (
       <div>
+        <p>We need some controls to select bot id, etc</p>
         <Chart chartType="ScatterChart"
                rows={this.state.data}
                columns={this.state.columns}

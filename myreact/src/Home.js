@@ -27,48 +27,6 @@ var colData = [
 
 
 
-class MyChart extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      columns: colData,
-      data: this.props.data
-    }
-  }
-
-
-  componentWillMount1() {
-    let currentComponent = this;
-    console.log('called willmount');
-
-    fetch('https://1ujflj28sk.execute-api.us-west-2.amazonaws.com/dev/api/metrics/soil?deviceid=1600aaaaffff0061')
-    .then( function(resp) {return resp.json(); })
-    .then( function(resp_data) {
-
-      var graphData = resp_data.map(item => [new Date(item.CreatedAt), item.tempf]);
-      currentComponent.setState({data: graphData});
-
-    });
-  }
-
-
-  render() {
-    return (
-      <div>
-        <Chart chartType="ScatterChart"
-               rows={this.state.data}
-               columns={this.state.columns}
-               options={{}}
-               graph_id = "ScatterChart"
-               width="100%"
-               height="400px"
-               legend_toggle
-        />
-      </div>
-    )
-  };
-
-}
 
 class EditDataPane extends React.Component {
   constructor(props) {
@@ -122,9 +80,9 @@ class Home extends Component {
 
 
     return (
-      <div className="App">
-        <h2>myreact landing page</h2>
-        <MyChart data={graphData} />
+      <div>
+        <h2>Home</h2>
+        { /*<MyChart data={graphData} /> */ }
         <hr />
         <BotChart data={graphData} />
         <hr />
