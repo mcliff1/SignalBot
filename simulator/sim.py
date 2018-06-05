@@ -14,6 +14,7 @@
 import json
 import time
 import urllib2
+import uuid
 import argparse
 
 
@@ -34,6 +35,12 @@ def post_data(bot, url):
     data = bot.status()
     #response = None
     #if (bot.type() in url_endpoints):
+    if url.startswith('file:/'):
+        filename = url[6:] + str(uuid.uuid4())
+        with open(filename, 'w') as f:
+            f.write(json.dumps(data))
+        return
+
     target_url = url + bot.type()
     req = urllib2.Request(target_url)
     req.add_header('Content-Type', 'application/json')
@@ -59,9 +66,10 @@ def main(bot_list):
     #parser.add_argument('-d', '--data', help='JSON formatted string to pass in')
     #parser.add_argument('-v', '--verbose', action="store_true", help='shows full output')
     URLS = {
-       'api' : "https://bot-api.mattcliff.net/dev/api/metrics/",
-       'rds' : "https://vwqqwu30m0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/",
-       'ddb' : "https://1ujflj28sk.execute-api.us-west-2.amazonaws.com/dev/api/metrics/"
+       'api' : 'https://bot-api.mattcliff.net/dev/api/metrics/',
+       'file' : 'file:/./output/',
+       'rds' : 'https://vwqqwu30m0.execute-api.us-west-2.amazonaws.com/dev/api/metrics/',
+       'ddb' : 'https://1ujflj28sk.execute-api.us-west-2.amazonaws.com/dev/api/metrics/'
     }
 
 
@@ -82,7 +90,7 @@ def main(bot_list):
             print('%s : %s' % (url, URLS[url]))
         return
 
- 
+
     if dump_type is not None:
         print("I really need to do something here with %s" % dump_type)
         # exit the main method without going into the loop
@@ -126,5 +134,3 @@ if __name__ == '__main__':
     ]
 
     main(bot_list=BOT_ARRAY)
-
-
