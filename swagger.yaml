@@ -7,8 +7,10 @@ info:
   title: Signal Bot API Schema
   contact:
     email: matt@denvercliffs.com
-host: www.cliffconsulting.com
-basePath: /
+host: bot-api.mattcliff.net
+basePath: /dev
+schemes:
+  - https
 tags:
   - name: bot
     description: Metrics to post and retrieve
@@ -31,20 +33,29 @@ paths:
         - name: bottype
           in: path
           type: string
+          description: type of sensor bot
           required: true
-          items:
-            type: string
-            enum:
-              - soil
-              - aqua
-              - cure
-              - light
-              - gas
+          enum:
+            - soil
+            - aqua
+            - cure
+            - light
+            - gas
+        - name: deviceid
+          in: query
+          description: the device id to get a full report on
+          required: false
+          type: string
+        - name: startdate
+          in: query
+          description: if included with deviceid will get records since this date (yyyy-mm-dd)
+          required: false
+          type: string
     post:
       tags:
         - bot
-      summary: log a reading for soilbot
-      description: ''
+      summary: log a reading for sensor bot
+      description: does the post operation with JSON payload in the body
       operationId: postSoil
       consumes:
         - application/json
@@ -55,14 +66,13 @@ paths:
           in: path
           type: string
           required: true
-          items:
-            type: string
-            enum:
-              - soil
-              - aqua
-              - cure
-              - light
-              - gas
+          description: type of sensor bot
+          enum:
+            - soil
+            - aqua
+            - cure
+            - light
+            - gas
         - name: body
           in: body
           required: true
@@ -79,7 +89,16 @@ definitions:
     properties:
       deviceid:
         type: string
+        required: true
+      bottype:
+        type: string
+        required: true
+      battery:
+        type: double
+        required: false
+      volts:
+        type: double
+        required: false
 externalDocs:
   description: Find out more about SignalBot
-  url: 'https://github.com/mcliff1/SignalBot'
-  
+  url: https://github.com/mcliff1/SignalBot

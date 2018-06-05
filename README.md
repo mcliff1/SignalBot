@@ -52,7 +52,7 @@ The Lambda function connects to a DynamoDB table, the REST interface does not ch
 
 Open this link with
  swagger UI -
- [swagger.yaml](https://github.com/mcliff1/SignalBot/raw/master/swagger.yaml
+ [swagger.yaml](https://github.com/mcliff1/SignalBot/raw/master/swagger.yaml)
 
 
 

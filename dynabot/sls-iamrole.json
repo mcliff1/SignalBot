@@ -45,7 +45,9 @@
 										"logs:*",
 										"iam:*",
 										"s3:*",
-										"apigateway:*"
+										"apigateway:*",
+										"ssm:Get*",
+										"cloudfront:UpdateDistribution"
 									],
 									"Resource" : "*",
 									"Effect" : "Allow"
@@ -55,6 +57,13 @@
 										"s3:*"
 									],
 									"Resource" : "arn:aws:s3:::dynabot*",
+									"Effect" : "Allow"
+								},
+								{
+									"Action" : [
+										"cloudfront:UpdateDistribution*"
+									],
+									"Resource" : "*",
 									"Effect" : "Allow"
 								},
 								{
