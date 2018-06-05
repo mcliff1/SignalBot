@@ -149,6 +149,14 @@ Currently the serverless.yml is hardcoded to look for **botbase**
 
 You can run the Cloud Formation templates either from a CLI, or the AWS console.
 
+### Deploy Static code
+
+Go ahead and build the workstation in the next steps, and you can run this from the git repo you pull down on that server.
+
+`./deploy-web.sh` run from the SLS server will do everything necessary (in *us-west-2*)
+
+Then sync the build directory to the S3 bucket for the web (which can be gotten from *SSM*)
+
 
 
 TODO - this should create the IAM role necessary
