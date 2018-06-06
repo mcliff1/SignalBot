@@ -1,17 +1,9 @@
 import React, { Component } from 'react';
-import { ObjectInspector, TableInspector } from 'react-inspector';
 import ReactJson from 'react-json-view';
 import { JsonEditor } from 'react-json-edit';
 import { render } from 'react-dom';
 import { Chart } from 'react-google-charts';
 import BotChart from './BotChart.js';
-
-
-var mydata = [
-  { deivceid : 'bot2', CreatedAt: '2018-04-30 12:23:34', temp: 76.2, humidity: 26.1 },
-  { deivceid : 'bot2', CreatedAt: '2018-05-02 12:23:34', temp: 76.4, humidity: 26.0 },
-  { deivceid : 'bot2', CreatedAt: '2018-05-05 12:23:34', temp: 76.6, humidity: 26.0 },
-];
 
 
 
@@ -28,49 +20,6 @@ var colData = [
 
 
 
-class EditDataPane extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      json: this.props.data
-    }
-  }
-
-  callback = (changes) => {
-    this.setState({json: changes});
-  };
-
-  render() {
-    return (
-      <div>
-        <JsonEditor value={this.state.json} propagateChanges={this.callback} />
-      </div>
-  )};
-}
-
-class DataPane extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      myData: [ ]
-    };
-  }
-
-
-
-  render() {
-    let data = this.props.data;
-    return (
-      <div>
-        <h3>Here is where we will put the data</h3>
-        <p>JSON - ZZ</p>
-        <div>
-          <ReactJson src={this.state.myData} collapsed="true"/>
-        </div>
-      </div>
-  )};
-}
-
 
 class MyChart extends Component {
   render() {
@@ -86,7 +35,6 @@ class MyChart extends Component {
         <hr />
         <BotChart data={graphData} />
         <hr />
-        <DataPane data={graphData} />
       </div>
     );
   }
