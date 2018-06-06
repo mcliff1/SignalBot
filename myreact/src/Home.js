@@ -1,74 +1,60 @@
 import React, { Component } from 'react';
 import ReactJson from 'react-json-view';
 import { JsonEditor } from 'react-json-edit';
-
-
-const mydata = [
-  { deviceid : 'bot2', CreatedAt: '2018-04-30 12:23:34', temp: 76.2, humidity: 26.1 },
-  { deviceid : 'bot2', CreatedAt: '2018-05-02 12:23:34', temp: 76.4, humidity: 26.0 },
-  { deviceid : 'bot2', CreatedAt: '2018-05-05 12:23:34', temp: 76.6, humidity: 26.0 },
-];
+import { connect } from 'react-redux';
 
 
 
-class EditDataPane extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      json: this.props.data
-    }
-  }
 
-  callback = (changes) => {
-    this.setState({json: changes});
-  };
-
-  render() {
+const EditDataPane = ({data, callback}) => {
     return (
       <div className="border">
-        <JsonEditor value={this.state.json} propagateChanges={this.callback} />
+        <JsonEditor value={data} propagateChanges={(evt) => callback(data)} />
       </div>
-  )};
-}
+  );
+};
 
 
 
 
-class DataPane extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      myData: [ ]
-    };
-  }
-
-
-  render() {
+const DataPane = ({data}) =>  {
     return (
       <div className="border">
         <h3>Here is where we will put the data</h3>
-        <p>JSON - ZZ</p>
+        <p>JSON - Viewer</p>
         <div>
-          <ReactJson src={this.state.myData} collapsed="true"/>
+          <ReactJson src={data} collapsed="true"/>
         </div>
       </div>
-  )};
-}
+  );
+};
 
 
-class Home extends Component {
-  render() {
-
+const Home = ({data, callback}) => {
     return (
       <div>
         <h2>Home</h2>
         <p>What are we going to do with this stuff</p>
-        <DataPane />
+        <DataPane data={data} />
         <hr />
-        <EditDataPane />
+        <EditDataPane data={data} callback={callback} />
       </div>
     );
   }
+
+const mapStoreToProps = store => {
+  return {
+    data: store.home.data,
+  }
+}
+const mapDispatchToProps = dispatch => {
+  return {
+    callback: (evt) => dispatch({
+      type: 'JSON_EDIT',
+      payload: evt
+    })
+  }
 }
 
-export default Home;
+
+export default connect(mapStoreToProps, mapDispatchToProps)(Home);
