@@ -10,7 +10,7 @@ for: soil, cure, aqua, gas, and light bots
 
 Modification from bot;  this is to backend to DynamoDB which we will control in this unit
 re: https://github.com/serverless/examples/blob/master/aws-python-rest-api-with-dynamodb/
-  
+
 """
 import os
 import datetime
@@ -126,7 +126,7 @@ def get_call(bot_type, jsonstr):
         if jsonstr is not None and 'startdate' in jsonstr.keys():
             fromdate = jsonstr['startdate']
             logging.info("parse date '%s' as %s" % (fromdate, parse(fromdate)))
-    
+
 
         if jsonstr is None:
             """
@@ -144,7 +144,7 @@ def get_call(bot_type, jsonstr):
             # trims off the bottype from Id
             if len(r_deviceid) > 0:
                 r_deviceid = '-'.join(r_deviceid.split('-')[1:])
-           
+
             jstr = {"count" : nrow,
                     "deviceid": r_deviceid,
                     "CreatedAt": r_CreatedAt}
@@ -162,8 +162,8 @@ def get_call(bot_type, jsonstr):
                 """
 
                 rslt = db_table.query(KeyConditionExpression=Key('Id').eq(bot_type + '-' + jsonstr['deviceid']) & Key('CreatedAt').gte(jsonstr['startdate']))['Items']
-          
- 
+
+
             else:
                 """
                 return all data for this device
@@ -174,17 +174,17 @@ def get_call(bot_type, jsonstr):
 
             # this is a list of JSON objects,  do I just return them direct??
             logging.info(len(rslt))
-            
+
             # strip out the Id field
             for element in rslt:
                 del element['Id']
 
-            jstr = rslt 
+            jstr = rslt
             rc = 200
         elif 'startdate' in jsonstr.keys():
             """
             Return ALL data for this type of bot since this date
-   
+
             NOT SUPPORTED
             """
 
@@ -198,10 +198,23 @@ def get_call(bot_type, jsonstr):
             for element in rslt:
                 del element['Id']
 
-            jstr = rslt 
+            jstr = rslt
             rc = 200
+        elif 'list' in jsonstr.keys():
+            """
+            Return unique list of all device id's for the bot_type
+
+            UNDOCUMENTED FEATUE
+            """
+            rslt = db_table.query(ProjectionExpression='Id', IndexName='BotTypeIndex', KeyConditionExpression=Key('bottype').eq(bot_type))
+
+            #uniq = set(map(lambda x: x['Id'], rslt['Items']))
+            uniq = [x[(len(bot_type)+1):] for x in list(set([x['Id'] for x in rslt['Items']]))]
+            jstr = uniq
+            rc = 200
+
         else:
-            jstr = {"msg" : "invalid request parameters", 
+            jstr = {"msg" : "invalid request parameters",
                     "data" : jsonstr}
             rc = 400
 
@@ -232,7 +245,7 @@ def handle_dynabot(event, context):
     """
     logging.info("debug: event: %s", event)
 
-    
+
     operation = event['httpMethod']
     data = event['queryStringParameters'] if operation == 'GET' else json.loads(event['body'])
 
@@ -277,6 +290,3 @@ def handle_dynabot1(event, context):
             "Content-Type" : "application/json",
         },
     }
-
-
-

@@ -20,9 +20,17 @@ In addition the *pyapi.py* utility can maintain a list of endpoints for POST/GET
 ## Architecture
 [back to top](#purpose)
 
-As mentioned, this provides more than one  implementation for the API.  Each implementation is utilizing API Gateway and Lambda, there is one that uses an *RDS* backend and another that utilizes *DynamoDB*.
+There are four basic components to the Architecture
+* Foundational components - Domain Name, and SSL certs must be set up (Route53, and Certificate Manager)
+* Framework components - S3 buckets, Cloud Resources (SNS, Parameter Manager)
+* API Layer - Lambda/API Gateway configuration providing REST interface
+* Persistence Layer - A DynamoDB and a PostgreSQL RDS implementation are provided
 
-For a future state we would like to include *AWS IOT* as an alternative to *HTTP POST*ing.
+For a future state we would like to include *AWS IOT* as an alternative to *HTTP POST* to the API.
+
+As of June 2018, the foundational components will have a recurring cost of *$0.50* a month for running a hosted zone in Route53, all other costs are withing the AWS Free Tier.  Beyond the free tier the expenses for the DynamoDB are the lowest, and based on transactional volume (you should be able to get *o(10^6)* transactions for under a dollar).  The *RDS* expense will be driven off the footprint of the server.
+
+DynamoDB is not intended for a long-term store of the data, it does serve all the needs for a fully functional and scalable run-time API.
 
 ### Static Content Presentation
 
