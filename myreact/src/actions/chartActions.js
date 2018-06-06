@@ -31,19 +31,43 @@
  }
 
 
+// utility to get column
+const getColumnData = (source) => {
+  return [
+    { type: 'datetime', label: 'Date' },
+    { type: 'number', label: source }
+  ]
+}
+
  /**
   * triggers the update of the formatted data from the raw
   */
   export const setSource = (source, rawData) => {
-    console.log('source is ', source);
-    console.log('source is ', rawData);
 
-    const graphData = rawData.map(item => [new Date(item.CreatedAt), item.tempf]);
+    switch(source) {
+      case 'TEMP':
+        return({
+          type: 'CHART_SET_DATA',
+          column_data: getColumnData(source),
+          row_data: rawData.map(item => [new Date(item.CreatedAt), item.tempf])
+        });
+      case 'VOLTS':
+        return({
+          type: 'CHART_SET_DATA',
+          column_data: getColumnData(source),
+          row_data: rawData.map(item => [new Date(item.CreatedAt), item.volts])
+        });
+      case 'BATTERY':
+        return({
+          type: 'CHART_SET_DATA',
+          column_data: getColumnData(source),
+          row_data: rawData.map(item => [new Date(item.CreatedAt), item.battery])
+        });
+
+      default:
+        console.log('unknown source type', source);
+        return({ type: 'NO_OP' });
+    }
 
 
-    return({
-      type: 'CHART_SET_DATA',
-      column_data: colData,
-      row_data: graphData
-    });
   }

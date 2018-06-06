@@ -6,9 +6,9 @@ const ChartControl = ({ data, handleLoad, handleSource }) => (
   <div>
     This is my chart control panel,
     <Button onClick={handleLoad}>Load Data</Button>
-    <Button onClick={() => handleSource('battery')}>Battery</Button>
-    <Button onClick={() => handleSource('volts')}>Volt</Button>
-    <Button onClick={() => handleSource('temp')}>Temp</Button>
+    <Button onClick={() => handleSource('BATTERY')}>Battery</Button>
+    <Button onClick={() => handleSource('VOLTS')}>Volt</Button>
+    <Button onClick={() => handleSource('TEMP')}>Temp</Button>
     <p> I need to select data to drive the chart and get it into the store</p>
     HEre is my Data
     { data ?
