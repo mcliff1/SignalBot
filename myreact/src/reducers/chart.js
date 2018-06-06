@@ -3,13 +3,28 @@
  *  Chart Reducer (Redux)
  */
 const defaultState = {
-  data: null
+  rawData: null,
+  data: null,
+  columns: null
 }
 
 const chart = (state = defaultState, action) => {
   switch (action.type) {
+    case 'CHART_LOAD_DATA':
+      return {
+        ...state,
+        rawData: action.payload,
+      };
+
+    case 'CHART_SET_DATA':
+      return {
+        ...state,
+        data: action.row_data,
+        columns: action.column_data
+      };
+
     default:
-      console.log('Unhandled Action', action);
+      console.log('Unhandled Action', action.type);
       return state;
 
   }
