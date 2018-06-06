@@ -25,11 +25,14 @@ class EditDataPane extends React.Component {
 
   render() {
     return (
-      <div>
+      <div className="border">
         <JsonEditor value={this.state.json} propagateChanges={this.callback} />
       </div>
   )};
 }
+
+
+
 
 class DataPane extends React.Component {
   constructor(props) {
@@ -42,7 +45,7 @@ class DataPane extends React.Component {
 
   render() {
     return (
-      <div>
+      <div className="border">
         <h3>Here is where we will put the data</h3>
         <p>JSON - ZZ</p>
         <div>
