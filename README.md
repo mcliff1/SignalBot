@@ -6,7 +6,7 @@ The design approach is to leverage *CloudFormation* and *serverless* templates f
 
 The *simulator/sim.py* provides a simulator which will publish events either to **HTTP POST** or direct to file system. *simulator/signalbot.py* is a python object model for the *bots*.
 
-In addition the *pyapi.py* utility can maintain a list of endpoints for POST/GET operations, the *swagger* file [swagger.yaml](https://github.com/mcliff1/SignalBot/raw/master/swagger.yaml is availble for the *OpenAPI 2.0* standard.
+In addition the *pyapi.py* utility can maintain a list of endpoints for POST/GET operations, the *swagger* file [swagger.yaml](https://github.com/mcliff1/SignalBot/raw/master/swagger.yaml) is availble for the *OpenAPI 2.0* standard.
 
 
 ### Contents
@@ -26,11 +26,11 @@ There are four basic components to the Architecture
 * API Layer - Lambda/API Gateway configuration providing REST interface
 * Persistence Layer - A DynamoDB and a PostgreSQL RDS implementation are provided
 
-For a future state we would like to include *AWS IOT* as an alternative to *HTTP POST* to the API.
+
 
 As of June 2018, the foundational components will have a recurring cost of *$0.50* a month for running a hosted zone in Route53, all other costs are withing the AWS Free Tier.  Beyond the free tier the expenses for the DynamoDB are the lowest, and based on transactional volume (you should be able to get *o(10^6)* transactions for under a dollar).  The *RDS* expense will be driven off the footprint of the server.
 
-DynamoDB is not intended for a long-term store of the data, it does serve all the needs for a fully functional and scalable run-time API.
+DynamoDB is not intended for a long-term store of the data, it does serve all the needs for a fully functional and scalable run-time API. For a future state we would like to include *AWS IOT* as an alternative to *HTTP POST* to the API.
 
 ### Static Content Presentation
 
@@ -64,69 +64,6 @@ Open this link with
 
 
 
-Example
->  POST /api/metrics/soil
->
-> {"beg":"beg","deviceid":"3c003e000247353137323334","soilmoisture1":"3308","soilmoisture2":"3498","soilmoisture3":"1","humidity":"16.9000","tempc":"22.0000","tempf":"71.6000","volts":"4.2250","battery":"104.9375"}
-
-
-#### GET
-
-No parameters, returns count, and information about most recent add; deviceid and startdate parameters can be provided for filtering, there is no way in the API to get list of deviceid's.
-
-**URI** `GET /api/metrics/<bottype>`
-
-**Params**
-* `deviceid=[string]` - returns all information about designated bot
-* Both `deviceid` and `startdate` - returns information since date for specified bot
-
-**example request**
-_GET /api/metrics/soilbot_
-**Content:** `{ 'count': xxx, 'deviceid' : 'xxxx-xxx-xxx-xxx', 'CreatedAt': 'XXX' }`
-
-_GET /api/metrics/soilbot?deviceid=1231-1231-1321-as12`_
-  all readings on the specified BOT in the system
-
-_GET /api/metrics/soilbot?startdate=2018-05-02&deviceid=1231-1231-123-1230_
-  all readings on the specific bot since 5/2/2018
-
-
-**Success Response**
-
-* **Code:** 200 <br />
-
-
-**Error Response**
-
-* **Code:** 510 <br />
-  **Content:** `{ error: "db error" }`
-
-
-
-#### POST
-
-
-
-**URI** `POST /api/metrics/<bottype>`
-
-
-**Data Param**
-
-Inbound JSON data string
-< _what is required for a post_ >
-
-**Success Response**
-
-* **Code:** 200 <br />
-  **Content:** `{ error: "db error" }`
-
-
-**Error Response**
-
-* **Code:** 510 <br />
-  **Content:** `{ error: "db error" }`
-
-
 
 
 ## Install
@@ -157,19 +94,8 @@ Currently the serverless.yml is hardcoded to look for **botbase**
 
 You can run the Cloud Formation templates either from a CLI, or the AWS console.
 
-### Deploy Static code
+### SLS Workstation to deploy Static code and serverless
 
-Go ahead and build the workstation in the next steps, and you can run this from the git repo you pull down on that server.
-
-`./deploy-web.sh` run from the SLS server will do everything necessary (in *us-west-2*)
-
-Then sync the build directory to the S3 bucket for the web (which can be gotten from *SSM*)
-
-
-
-TODO - this should create the IAM role necessary
-
-### Deploy Severless Code
 
 In order to deplpy the Serverless code, we need to set up a SLS workstation, there is a template that does this
 Next, create a SLS workstation, and deploy the serverless components (the workstation is created because need to run the *NodeJS* commands and need appropriate system permissions)
@@ -179,10 +105,26 @@ Use the Cloud Formation template from *mcliff1/aws* [ec2-slsworkstation](https:/
 Then create a *IAM* role we will need to install using the right script. **TODO** we need to clean up thse permissions scripts, there is a different set for deploying static content, api level, and the different DBs.;
 the EC2 create should take as optional input a *stack* name that was used as a base;  this sets  a parameter in *SSM* called `/{stackname}/iamEc2Role`
 
+
+TODO - this should create the IAM role necessary
+
+
 Log into the server; pull the code from GitHub and deploy
 * `git config --global --edit`  to set up GIT credentials
 * `git clone https://github.com/mcliff1/SignalBot`
 
+
+### Run Static Web Deploy
+
+`./deploy-web.sh` run from the SLS server will do everything necessary (in *us-west-2*)
+
+Then sync the build directory to the S3 bucket for the web (which can be gotten from *SSM*)
+
+
+
+### Deploy DyanmodDB backend
+
+If you choose the *RDS* option, skip this section.
 
 Here is it different based on the implementation, for Dynabot
 * `cd SignalBot/dynabot`
@@ -195,8 +137,9 @@ This creates the Lambda function, API gateway, API DNS name, and DynamoDB table.
 
 
 
-### RDS build
+### RDS backed API
 
+If you choose the *DynamoDB* option, skip this section
 
 The simplify implementation we will leverage the CloudFormation templates in the [mcliff1/aws](https://github.com/mcliff1/aws) repository.
 
@@ -230,8 +173,37 @@ Use the bastion host template in *mcliff1/aws* and then run the following; enter
 In order to run these serverless stacks you need to create a [SLS Workstation](#SLS_Workstation).
 
 <table width="100%">
+  <tr><th align="left">CFN Foundation</th></tr>
+  <tr width="100%">
+    <td width="100%" valign="top">
+    <p>Creates static resources for managing the stack, and sets parameters for other stacks</p>
+    <h6>Prerequistes</h6>
+    <ol>
+      <li>SSL certs created for API and Web interface in *us-east-1*</li>
+      <li>Hosted Zonein Route53</li>
+    </ol>
+    <h6>Parameters</h6>
+    <ol>
+      <li>creates some S3 buckets</li>
+      <li>a lambda function</li>
+      <li>CFN, SSL cert</li>
+      <li>Route53 DNS entry</li>
+    </ol>
+    <h6>Create Details</h6>
+    <ol>
+      <li>creates some S3 buckets</li>
+      <li>a lambda function</li>
+      <li>CFN, SSL cert</li>
+      <li>Route53 DNS entry</li>
+    </ol>
+    </td>
+  </tr>
+</table>
+
+
+<table width="100%">
   <tr><th align="left">Dynabot (SLS)</th></tr>
-  <tr>
+  <tr width="100%">
     <td width="100%" valign="top">
     <p>Creates everything</p>
     <h6>Prerequistes</h6>

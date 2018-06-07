@@ -51,6 +51,12 @@ paths:
           description: if included with deviceid will get records since this date (yyyy-mm-dd)
           required: false
           type: string
+        - name: list
+          in: query
+          description: flag that if present will return list of device ids
+          required: false
+          type: boolean
+          allowEmptyValue: true
     post:
       tags:
         - bot
