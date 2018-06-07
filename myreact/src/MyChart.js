@@ -42,7 +42,7 @@ const mapStoreToProps = store => {
 const mapDispathToProps = (dispatch, ownProps) => {
   console.log('ownProps', ownProps);
   return {
-    loadData: () => dispatch(loadData()),
+    loadData: (deviceid) => dispatch(loadData(deviceid)),
     setSource: (source, data) => dispatch(setSource(source, data))
   }
 }

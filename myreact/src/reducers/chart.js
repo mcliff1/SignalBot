@@ -10,7 +10,7 @@ const defaultState = {
 
 const chart = (state = defaultState, action) => {
   switch (action.type) {
-    case 'CHART_LOAD_DATA':
+    case 'CHART_LOAD_DATA_FULFILLED':
       return {
         ...state,
         rawData: action.payload,
