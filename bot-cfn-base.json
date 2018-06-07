@@ -247,6 +247,89 @@
         }
       }
     },
+
+
+
+    "SLSRole": {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [ {
+            "Effect" : "Allow",
+            "Principal" : {
+              "Service" : [ "ec2.amazonaws.com" ]
+            },
+            "Action" : [ "sts:AssumeRole" ]
+          } ]
+        },
+        "Path" : "/",
+        "Policies" : [{
+            "PolicyName" : "sls-iam-instance-policy",
+            "PolicyDocument": {
+              "Version" : "2012-10-17",
+              "Statement" : [
+                {
+                  "Action" : [
+                    "route53:*",
+                    "lambda:*",
+                    "dynamodb:*",
+                    "cloudformation:*",
+                    "logs:*",
+                    "iam:*",
+                    "s3:*",
+                    "apigateway:*",
+                    "ssm:Get*",
+                    "cloudfront:UpdateDistribution"
+                  ],
+                  "Resource" : "*",
+                  "Effect" : "Allow"
+                },
+                {
+                  "Action" : [
+                    "s3:*"
+                  ],
+                  "Resource" : "arn:aws:s3:::dynabot*",
+                  "Effect" : "Allow"
+                },
+                {
+                  "Action" : [
+                    "cloudfront:UpdateDistribution*"
+                  ],
+                  "Resource" : "*",
+                  "Effect" : "Allow"
+                },
+                {
+                  "Action" : [
+                    "dynamodb:*"
+                  ],
+                  "Resource" : "arn:aws:dynamodb:::table/dynabot*",
+                  "Effect" : "Allow"
+                },
+                {
+                  "Action" : [
+                    "apigateway:*"
+                  ],
+                  "Resource" : "arn:aws:apigateway:::/restapis*",
+                  "Effect" : "Allow"
+                }
+              ]
+            }
+          }]
+      }
+    },
+
+    "InstanceProfile": {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [
+          { "Ref" : "SLSRole" }
+        ]
+      }
+    },
+
+
     "ssmDomainName": {
       "Type" : "AWS::SSM::Parameter",
       "Properties" : {
@@ -300,6 +383,15 @@
         "Description" : "Name of the S3 Web Bucket",
         "Value" : {"Ref": "WebBucket"}
       }
+    },
+    "ssmProfileArn": {
+      "Type" : "AWS::SSM::Parameter",
+      "Properties" : {
+        "Name" : { "Fn::Sub" : "/${AWS::StackName}/profileArn"},
+        "Type" : "String",
+        "Description" : "ARN to use for EC2 Instance Profile Role",
+        "Value" : { "Fn::GetAtt" : ["InstanceProfile", "Arn"] },
+      }
     }
   },
   "Outputs": {
@@ -326,6 +418,11 @@
       "Description" : "Hostname for the API",
       "Value" : {"Ref": "WebHostName"},
       "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-WebHostName"}}
+    },
+    "ProfileArn" : {
+      "Description" : "Profile ARN",
+      "Value" : { "Fn::GetAtt" : ["InstanceProfile", "Arn"] },
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-ProfileArn"}}
     }
   },
   "Metadata": {

@@ -179,22 +179,25 @@ In order to run these serverless stacks you need to create a [SLS Workstation](#
     <p>Creates static resources for managing the stack, and sets parameters for other stacks</p>
     <h6>Prerequistes</h6>
     <ol>
-      <li>SSL certs created for API and Web interface in *us-east-1*</li>
+      <li>SSL certs created for API and Web interface in us-east-1</li>
       <li>Hosted Zonein Route53</li>
     </ol>
     <h6>Parameters</h6>
     <ol>
-      <li>creates some S3 buckets</li>
-      <li>a lambda function</li>
-      <li>CFN, SSL cert</li>
-      <li>Route53 DNS entry</li>
+      <li>Stack Name - calling stacks default to botbase</li>
+      <li>Domain Name - must have hosted zone in route 53</li>
+      <li>Hostnames for the Web and API Interface - should match the SSL cert name that was created</li>
+      <li>ARN for the 2 SSL certificates created as prerequistes (to match the hostnames)</li>
+      <li>GitHub Source - for the static content, not currently used</li>
+      <li>SNS Topic - used for notifications related to this stack</li>
     </ol>
     <h6>Create Details</h6>
     <ol>
-      <li>creates some S3 buckets</li>
-      <li>a lambda function</li>
-      <li>CFN, SSL cert</li>
+      <li>creates S3 bucket for web and build</li>
+      <li>CFN Distribution</li>
       <li>Route53 DNS entry</li>
+      <li>Cognito User Pool</li>
+      <li>SSM Parameters used by  the SLS stack and EC2 stacks</li>
     </ol>
     </td>
   </tr>
