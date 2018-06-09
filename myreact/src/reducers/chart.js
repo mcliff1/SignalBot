@@ -10,6 +10,15 @@ const defaultState = {
   isLoading: true,
 }
 
+// utility to get column
+const getColumnData = (source) => {
+  return [
+    { type: 'datetime', label: 'Date' },
+    { type: 'number', label: source }
+  ]
+}
+
+
 const chart = (state = defaultState, action) => {
   switch (action.type) {
     case 'CHART_DEVICELIST_PENDING':
@@ -37,9 +46,15 @@ const chart = (state = defaultState, action) => {
     case 'CHART_SET_DATA':
       return {
         ...state,
-        data: action.row_data,
-        columns: action.column_data
+        data: state.rawData.map(item => [new Date(item.CreatedAt), item[action.source]]),
+        columns: getColumnData(action.source)
       };
+
+
+
+      //row_data: rawData.map(item => [new Date(item.CreatedAt), item.volts])
+
+
 
     default:
       console.log('Unhandled Action', action.type);

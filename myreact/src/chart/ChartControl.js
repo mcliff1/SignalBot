@@ -19,9 +19,9 @@ const ChartControl = ({ data, deviceIdList, handleLoad, handleSource }) => {
       const x = document.getElementById('myDiD');
       //handleLoad(document.getElementById('deviceId').value)}
     }}>Load Data</Button>
-    <Button onClick={() => handleSource('BATTERY')}>Battery</Button>
-    <Button onClick={() => handleSource('VOLTS')}>Volt</Button>
-    <Button onClick={() => handleSource('TEMP')}>Temp</Button>
+    <Button onClick={() => handleSource('battery')}>Battery</Button>
+    <Button onClick={() => handleSource('volts')}>Volt</Button>
+    <Button onClick={() => handleSource('tempf')}>Temp</Button>
     <label>Device Id
     <select id='myDiD' onChange={handleDeviceIdChange}>
       {deviceIdList.map((id, index) =>

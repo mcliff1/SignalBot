@@ -43,15 +43,6 @@ export const loadData = (deviceid) => {
 
 
 
-// utility to get column
-const getColumnData = (source) => {
-  return [
-    { type: 'datetime', label: 'Date' },
-    { type: 'number', label: source }
-  ]
-}
-
-
 
 export const loadDeviceList = () => {
   return ({
@@ -65,38 +56,12 @@ export const loadDeviceList = () => {
 }
 
 
-
-
-
- /**
-  * triggers the update of the formatted data from the raw
-  */
-  export const setSource = (source, rawData) => {
-
-    switch(source) {
-      case 'TEMP':
-        return({
-          type: 'CHART_SET_DATA',
-          column_data: getColumnData(source),
-          row_data: rawData.map(item => [new Date(item.CreatedAt), item.tempf])
-        });
-      case 'VOLTS':
-        return({
-          type: 'CHART_SET_DATA',
-          column_data: getColumnData(source),
-          row_data: rawData.map(item => [new Date(item.CreatedAt), item.volts])
-        });
-      case 'BATTERY':
-        return({
-          type: 'CHART_SET_DATA',
-          column_data: getColumnData(source),
-          row_data: rawData.map(item => [new Date(item.CreatedAt), item.battery])
-        });
-
-      default:
-        console.log('unknown source type', source);
-        return({ type: 'NO_OP' });
-    }
-
-
-  }
+/**
+ * triggers the update of the formatted data from the raw
+ */
+export const setSource = (source) => {
+  return({
+    type: 'CHART_SET_DATA',
+    source: source,
+  });
+}
