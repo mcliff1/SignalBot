@@ -49,16 +49,25 @@ export const loadData2 = ({deviceid}) => ({
  });
 
 
- export const loadData = ({deviceid}) => ({
+const fetchWithTimeout = (url, options, delay) => {
+  const timer = new Promise((resolve, reject) => {
+    setTimeout(() => reject(new Error('timeout', delay)));
+  });
+  return Promise.race([
+      fetch(url, options),
+      timer
+  ]);
+}
+
+
+export const loadData = ({deviceid}) => {
+  return({
    type: 'CHART_LOAD_DATA',
-   payload: new Promise(resolve => {
-     setTimeout(() => {
-       fetch(API_ENDPOINT + 'soil?deviceid=' + deviceid,
+   payload: fetchWithTimeout(API_ENDPOINT + 'soil?deviceid=' + deviceid,
          {
            method: 'GET',
            headers: {'Content-Type' : 'application/json'}
-         }).then(response => response.json());
-       }, 2000);
+         }, 1000).then(response => response.json())
     })
 
    // payload: fetch(API_ENDPOINT + 'soil?deviceid=' + deviceid, {
@@ -66,7 +75,7 @@ export const loadData2 = ({deviceid}) => ({
    //   headers: { 'Content-Type' : 'application/json' }
    // }).then(res => res.json())
 
-  });
+ }
 
 
 
