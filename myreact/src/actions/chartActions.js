@@ -50,8 +50,9 @@ export const loadData2 = ({deviceid}) => ({
 
 
 const fetchWithTimeout = (url, options, delay) => {
+  console.log('fetchWithTimeout url:' + url);
   const timer = new Promise((resolve, reject) => {
-    setTimeout(() => reject(new Error('timeout', delay)));
+    setTimeout(() => reject(new Error('timeout')), delay);
   });
   return Promise.race([
       fetch(url, options),
@@ -60,15 +61,18 @@ const fetchWithTimeout = (url, options, delay) => {
 }
 
 
-export const loadData = ({deviceid}) => {
+export const loadData = (deviceid) => {
+  const url = API_ENDPOINT + 'soil?deviceid=' + deviceid;
+  const options = {
+    method: 'GET',
+    headers: {'Content-Type' : 'application/json'}
+  };
+  console.log('url' + url);
+
   return({
    type: 'CHART_LOAD_DATA',
-   payload: fetchWithTimeout(API_ENDPOINT + 'soil?deviceid=' + deviceid,
-         {
-           method: 'GET',
-           headers: {'Content-Type' : 'application/json'}
-         }, 1000).then(response => response.json())
-    })
+   payload: fetchWithTimeout(url, options, 5000).then(response => response.json())
+ });
 
    // payload: fetch(API_ENDPOINT + 'soil?deviceid=' + deviceid, {
    //   method: 'GET',

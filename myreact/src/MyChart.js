@@ -32,7 +32,7 @@ const MyChart = ( {rawData, data, deviceIdList, columns, setSource, loadData } )
   }
 
 const wrapLoadData = (deviceid) => {
-  alert('in the MyChart');
+  alert('in the MyChart' + deviceid);
   return loadData(deviceid);
 }
 
