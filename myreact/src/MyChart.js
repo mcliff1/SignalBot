@@ -31,11 +31,6 @@ const MyChart = ( {rawData, data, deviceIdList, columns, setSource, loadData } )
     );
   }
 
-const wrapLoadData = (deviceid) => {
-  alert('in the MyChart' + deviceid);
-  return loadData(deviceid);
-}
-
 
 // from reduxjs.org/basics/usage-with-react
 //  maps from the overall store to this component props
@@ -50,7 +45,7 @@ const mapStoreToProps = store => {
 
 const mapDispathToProps = (dispatch, ownProps) => {
   return {
-    loadData: (deviceid) => dispatch(wrapLoadData(deviceid)),
+    loadData: (deviceid) => dispatch(loadData(deviceid)),
     setSource: (source, data) => dispatch(setSource(source, data)),
     getDeviceIdList: () => dispatch(getDeviceIdList())
   }

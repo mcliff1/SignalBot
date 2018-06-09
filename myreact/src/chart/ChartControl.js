@@ -9,7 +9,6 @@ const ChartControl = ({ data, deviceIdList, handleLoad, handleSource }) => {
     //alert('handle' + e);
     const x = document.getElementById('myDiD');
     const deviceId = x.options[x.selectedIndex].value;
-    alert('handle at ' + deviceId);
     handleLoad(deviceId);
   }
 
@@ -18,7 +17,6 @@ const ChartControl = ({ data, deviceIdList, handleLoad, handleSource }) => {
     This is my chart control panel,
     <Button onClick={() => {
       const x = document.getElementById('myDiD');
-      alert('value:', x.options[x.selectedIndex].value)
       //handleLoad(document.getElementById('deviceId').value)}
     }}>Load Data</Button>
     <Button onClick={() => handleSource('BATTERY')}>Battery</Button>
