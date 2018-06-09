@@ -5,16 +5,34 @@
 const defaultState = {
   rawData: null,
   data: null,
-  columns: null
+  columns: null,
+  deviceIdList: [],
+  isLoading: true,
 }
 
 const chart = (state = defaultState, action) => {
   switch (action.type) {
+    case 'CHART_DEVICELIST_PENDING':
+    case 'CHART_LOAD_DATA_PENDING':
+      return {
+        ...state,
+        isLoading: true,
+      };
+
     case 'CHART_LOAD_DATA_FULFILLED':
       return {
         ...state,
         rawData: action.payload,
+        isLoading: false,
       };
+
+    case 'CHART_DEVICELIST_FULFILLED':
+      return {
+        ...state,
+        deviceIdList: action.payload,
+        isLoading: false,
+      };
+
 
     case 'CHART_SET_DATA':
       return {

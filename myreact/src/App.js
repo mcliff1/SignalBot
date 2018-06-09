@@ -1,19 +1,23 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom';
-import { Provider } from 'react-redux';
+import { connect } from 'react-redux';
 import { Nav, Navbar, NavLink, NavItem, NavbarBrand } from 'reactstrap';
-import store from './store'
 import './App.css';
 import Home from './Home';
 import MyChart from './MyChart';
 import DataView from './DataView';
+import { loadDeviceList } from './actions/chartActions';
 
 
 class App extends Component {
+
+  componentWillMount() {
+    this.props.loadDeviceList();
+  }
+
   render() {
 
     return (
-      <Provider store={store}>
       <Router>
       <div>
         <Navbar>
@@ -33,9 +37,18 @@ class App extends Component {
         </Switch>
       </div>
       </Router>
-      </Provider>
     );
   }
 }
 
-export default App;
+const mapStateToProps = (state) => {
+  return {
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    loadDeviceList: () => dispatch(loadDeviceList()),
+  }
+}
+export default connect(mapStateToProps, mapDispatchToProps)(App);

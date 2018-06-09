@@ -25,7 +25,6 @@ const home = (state = defaultState, action) => {
         ...state
       }
     default:
-      console.log('Unhandled Action', action.type);
       return state;
 
   }
