@@ -120,6 +120,8 @@ Log into the server; pull the code from GitHub and deploy
 
 Then sync the build directory to the S3 bucket for the web (which can be gotten from *SSM*)
 
+AWS *CodeBuild* is set up as part of the template, by default it is connected to [this](https://github.com/mcliff1/SignalBot.git) GitHub repository.
+
 
 
 ### Deploy DyanmodDB backend
