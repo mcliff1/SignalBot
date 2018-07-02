@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { Nav, Navbar, NavLink, NavItem, NavbarBrand } from 'reactstrap';
 import './App.css';
 import Home from './Home';
+import Menu, { MenuItem } from 'rc-menu';
 import MyChart from './MyChart';
 import DataView from './DataView';
 import { loadDeviceList } from './actions/chartActions';
@@ -28,6 +29,9 @@ class App extends Component {
           <NavItem><NavLink tag={Link} to={'/data'}>Data</NavLink></NavItem>
         </Nav>
         </Navbar>
+        <Menu>
+        <MenuItem>Home</MenuItem>
+        </Menu>
 
 
         <Switch>

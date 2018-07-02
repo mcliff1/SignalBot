@@ -33,7 +33,7 @@ const DataPane = ({data}) =>  {
 const DataView = ({data, callback}) => {
     return (
       <div>
-        <h2>Home</h2>
+        <h2>Data</h2>
         <p>What are we going to do with this stuff</p>
         <DataPane data={data} />
         <hr />
