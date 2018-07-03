@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import { Nav, Navbar, NavLink, NavItem, NavbarBrand } from 'reactstrap';
 import './App.css';
 import Home from './Home';
-import Menu, { MenuItem } from 'rc-menu';
 import MyChart from './MyChart';
 import DataView from './DataView';
 import { loadDeviceList } from './actions/chartActions';
@@ -20,18 +19,22 @@ class App extends Component {
 
     return (
       <Router>
-      <div>
+      <div className="container">
         <Navbar>
         <NavbarBrand href="/">SignalBot Home</NavbarBrand>
-        <Nav navbar>
+        <Nav tabs>
           <NavItem><NavLink tag={Link} to={'/'}>Home</NavLink></NavItem>
           <NavItem><NavLink tag={Link} to={'/chart'}>Chart</NavLink></NavItem>
           <NavItem><NavLink tag={Link} to={'/data'}>Data</NavLink></NavItem>
         </Nav>
         </Navbar>
-        <Menu>
-        <MenuItem>Home</MenuItem>
-        </Menu>
+        <nav className="navbar navbar-expand-lg navbar-light bg-light">
+          <a className="navbar-brand" href="/">Bot UI</a>
+          <button className="navbar-toggler">
+            <span className="navbar-toggler-icon"></span>
+          </button>
+        </nav>
+
 
 
         <Switch>
