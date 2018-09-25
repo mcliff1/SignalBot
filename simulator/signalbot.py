@@ -3,6 +3,7 @@
   author: Matt Cliff
   created: April 7, 2018
 
+ REUIRES NUMPY
 """
 
 import numpy as np
