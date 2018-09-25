@@ -2,7 +2,8 @@
 #
 version: 0.2
 
-
+#
+# this builds the S3 static content
 phases:
 
   install:

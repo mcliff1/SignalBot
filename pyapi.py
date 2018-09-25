@@ -1,10 +1,13 @@
 #!/usr/bin/python
-""" 
+# -*- coding: utf-8 -*-
+"""
+for python 2.7
+
 pyapi.py <options>
   --list displays all saved urlnames (overrides all over options)
-  --action GET, POST, PUT, or DELETE HTTP action to call (required this or save)
+  --action GET, POST, PUT, or DELET HTTP action to call (required this or save)
   --url the URL string to send the request too (overrides urlname)
-  --urlname the name to use from ~/.pyapi config file 
+  --urlname the name to use from ~/.pyapi config file
   --save persists the provided <URL> to <URLNAME> (requires this or action)
 
 
@@ -47,7 +50,7 @@ def dump_config():
 def get_config(name):
     """
     saves a url to the name
-    
+
     """
     db = dbm.open(config_file, 'c')
     url = db[name]
@@ -58,7 +61,7 @@ def get_config(name):
 def save_config(name, url):
     """
     saves a url to the name
-    
+
     """
     db = dbm.open(config_file, 'c')
     db[name] = url
@@ -67,7 +70,7 @@ def save_config(name, url):
 def remove_config(name):
     """
     removes the name from configuration
-    
+
     if name isnt there throughs a KeyError
     """
     db = dbm.open(config_file, 'c')
@@ -107,7 +110,7 @@ def main():
             return(-6)
         remove_config(args['name'])
         return(0)
-       
+
     action = args['action']
     if action is not None and action not in methods.keys():
         print "unknown action '%s'" % action
@@ -120,8 +123,8 @@ def main():
     if action is None and args['save'] is False:
         print "you must include either a action or save"
         return(-5)
- 
-    if action is not None: 
+
+    if action is not None:
         # execute the action now
         target = args['url'] if args['url'] is not None else get_config(args['name'])
         data = None if args['data'] is None else ast.literal_eval(args['data'])
@@ -131,7 +134,7 @@ def main():
             print response.text
         print response.status_code
 
-    
+
     if args['save'] is not False:
         if args['url'] is None or args['name'] is None:
             print "both --url and --name must be present with the --save option"

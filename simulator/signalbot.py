@@ -7,7 +7,8 @@
 
 import numpy as np
 
-class SimBot(object):
+
+class SimBot():
     """
     Base Class for Simulator Bot, has temp, battery and volts embedded
     """
@@ -26,14 +27,14 @@ class SimBot(object):
         self.__tempf = tempf
         self.__tempc = (tempf-32)/1.8
 
-    def __str__(self):
-        return("%s-%s" % (self.__bottype, self.__deviceid))
+    def __repr__(self):
+        return "%s-%s" % (self.__bottype, self.__deviceid)
 
     def type(self):
         """
         identifies the type of bot instance
         """
-        return(self.__bottype)
+        return self.__bottype
 
     def status(self):
         """
@@ -95,9 +96,7 @@ class CureBot(SimBot):
         jsondata['uvindex'] = self.__uvindex
         jsondata['visible'] = self.__visible
         jsondata['humidity'] = self.__humidity
-        return(jsondata)
-
-
+        return jsondata
 
 
 
@@ -133,10 +132,7 @@ class SoilBot(SimBot):
         jsondata['soilmoisture2'] = self.__soilmoisture2
         jsondata['soilmoisture3'] = self.__soilmoisture3
         jsondata['humidity'] = self.__humidity
-        return(jsondata)
-
-
-
+        return jsondata
 
 
 
@@ -181,9 +177,7 @@ class AquaBot(SimBot):
         jsondata['tds'] = self.__tds
         jsondata['ph'] = self.__ph
         jsondata['doxygen'] = self.__doxygen
-        return(jsondata)
-
-
+        return jsondata
 
 
 
@@ -227,7 +221,7 @@ class LightBot(SimBot):
         jsondata['fullspec'] = self.__fullspec
         jsondata['visible'] = self.__visible
         jsondata['humidity'] = self.__humidity
-        return(jsondata)
+        return jsondata
 
 
 
@@ -259,13 +253,13 @@ class GasBot(SimBot):
     def status(self):
         jsondata = super(GasBot, self).status()
         jsondata['carbondioxide'] = self.__carbondioxide
-        return(jsondata)
+        return jsondata
 
 
-#----------------------end section for class defition
+#----------------------end section for class definition
 
 
-class Config(object):
+class Config():
     """
     Configuration file object lets us get and persist urls
     """
@@ -276,3 +270,13 @@ class Config(object):
         """
 
 
+
+
+#--------------------- test method -----------------
+def main():
+    simbot = SimBot('devi-ceid-0123-4567')
+    print(simbot)
+    print(simbot.status())
+
+if __name__ == '__main__':
+    main()
