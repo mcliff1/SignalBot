@@ -12,6 +12,7 @@ In addition the *pyapi.py* utility can maintain a list of endpoints for POST/GET
 ### Contents
 * [Architecture](#architecture)
 * [REST API](#api)
+* [Code](#code)
 * [Install](#install)
 * [References](#references)
 
@@ -66,8 +67,16 @@ Open this link with
 
 
 
-## Install
-[back to top](#purpose)
+ ## Code
+ [back to top](#purpose)
+
+Explain layout of code.
+
+Use 'develop', 'test', and 'master' branch to reflect environments.  
+
+
+ ## Install
+ [back to top](#purpose)
 
 The install path depends on the API implementation, there are several common steps.
 
