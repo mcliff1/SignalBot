@@ -1,5 +1,7 @@
 # uses aws/codebuild/nodejs:8.11.0
-#
+#   this is used in the bot-cfn-base.json cloud formation stack
+# Properties
+#    WEB_BUCKET
 version: 0.2
 
 #

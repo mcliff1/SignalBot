@@ -72,7 +72,10 @@ Open this link with
 
 Explain layout of code.
 
-Use 'develop', 'test', and 'master' branch to reflect environments.  
+Use 'develop', 'test', and 'master' branch to reflect environments.
+
+
+
 
 
  ## Install
@@ -82,7 +85,7 @@ The install path depends on the API implementation, there are several common ste
 
 ### Prerequistes
 
-Before running any scripts of utilities in this repository, there must be an AWS account, with a hosted zone and two SSL certs created in the *us-east-1* region.
+Before running any scripts of utilities in this repository, there must be an AWS account, with a hosted zone and two SSL certs created in the *us-east-1* region. Two **A** record will be created.
 
 * a Hosted Zone must exist in the AWS account
 * SSL certs for the web host and the api need to be created in the us-east-1 Zone
@@ -100,6 +103,7 @@ Currently the serverless.yml is hardcoded to look for **botbase**
 * *CloudFront* distribution
 * *Route53* DNS Entries for Web
 * Stores key parameters in the *Parameter Store*
+* *CodeBuild* project is set up with GitHub source
 
 You can run the Cloud Formation templates either from a CLI, or the AWS console.
 
@@ -107,7 +111,11 @@ You can run the Cloud Formation templates either from a CLI, or the AWS console.
 
 
 In order to deplpy the Serverless code, we need to set up a SLS workstation, there is a template that does this
-Next, create a SLS workstation, and deploy the serverless components (the workstation is created because need to run the *NodeJS* commands and need appropriate system permissions)
+Next, create a SLS workstation, and deploy the serverless components (the workstation is created because need to run the *NodeJS* commands and need appropriate system permissions).
+
+
+Can I do all this with a docker image instead?
+
 
 Use the Cloud Formation template from *mcliff1/aws* [ec2-slsworkstation](https://github.com/mcliff1/aws/blob/master/ec2-slsworkstation.json)
 
