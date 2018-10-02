@@ -22,8 +22,8 @@ In addition the *pyapi.py* utility can maintain a list of endpoints for POST/GET
 [back to top](#purpose)
 
 There are four basic components to the Architecture
-* Foundational components - Domain Name, and SSL certs must be set up (Route53, and Certificate Manager)
-* Framework components - S3 buckets, Cloud Resources (SNS, Parameter Manager)
+* Foundational components - Hosted Zone, and SSL certs must be set up (Route53, and Certificate Manager) independent of any AWS templates or configuration
+* Framework components - S3 buckets, Cloud Resources (SNS, Parameter Manager) generated for each environment with *bot-cfn-base.json* template
 * API Layer - Lambda/API Gateway configuration providing REST interface
 * Persistence Layer - A DynamoDB and a PostgreSQL RDS implementation are provided
 
@@ -103,7 +103,7 @@ Currently the serverless.yml is hardcoded to look for **botbase**
 * *CloudFront* distribution
 * *Route53* DNS Entries for Web
 * Stores key parameters in the *Parameter Store*
-* *CodeBuild* project is set up with GitHub source
+* *CodeBuild* project is set up with GitHub source (which docker image to build with and how to set environment variables)
 
 You can run the Cloud Formation templates either from a CLI, or the AWS console.
 
