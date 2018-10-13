@@ -25,7 +25,7 @@ provider:
 
   vpc:
     securityGroupIds:
-      - 'Fn::ImportValue' : '${self:custom.vpcStack}-SecurityGroupId' 
+      - 'Fn::ImportValue' : '${self:custom.vpcStack}-SecurityGroupId'
     subnetIds:
       - "Fn::ImportValue" : "${self:custom.vpcStack}-PrivateSubnet1Id"
       - "Fn::ImportValue" : "${self:custom.vpcStack}-PrivateSubnet2Id"
@@ -41,7 +41,7 @@ functions:
     tags:
       created: serverless for SignalBot service
       Name: "${self:service}-${self:custom.stage}-service"
-      
+
 
     events:
       - http:
@@ -76,7 +76,7 @@ resources:
   Outputs:
      ExportServiceEndpoint:
        Description: "VPC that the instance in"
-       Value: 
+       Value:
           "Fn::Join":
             - ""
             - - "https://"
@@ -85,6 +85,5 @@ resources:
               - Ref: "AWS::Region"
               - ".amazonaws.com/"
               - ${self:custom.stage}
-       Export: 
+       Export:
            Name: "${self:service}-${self:custom.stage}-Endpoint"
-

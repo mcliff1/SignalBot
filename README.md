@@ -9,6 +9,10 @@ The *simulator/sim.py* provides a simulator which will publish events either to 
 In addition the *pyapi.py* utility can maintain a list of endpoints for POST/GET operations, the *swagger* file [swagger.yaml](https://github.com/mcliff1/SignalBot/raw/master/swagger.yaml) is availble for the *OpenAPI 2.0* standard.
 
 
+TODO - make a cloud formation stack that takes a RDS snapshot as input
+builds the right DB target;  for the purpose of being able to have a code source (GitHub or CodeCommit) be able to trigger builds from a specific branch.
+
+
 ### Contents
 * [Architecture](#architecture)
 * [REST API](#api)
