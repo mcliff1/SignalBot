@@ -12,6 +12,11 @@ In addition the *pyapi.py* utility can maintain a list of endpoints for POST/GET
 TODO - make a cloud formation stack that takes a RDS snapshot as input
 builds the right DB target;  for the purpose of being able to have a code source (GitHub or CodeCommit) be able to trigger builds from a specific branch.
 
+The serverless.yml should be 'aware' of the branch; and be able to pull the config
+
+
+
+
 
 ### Contents
 * [Architecture](#architecture)
