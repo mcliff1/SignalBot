@@ -9,9 +9,19 @@ The *simulator/sim.py* provides a simulator which will publish events either to 
 In addition the *pyapi.py* utility can maintain a list of endpoints for POST/GET operations, the *swagger* file [swagger.yaml](https://github.com/mcliff1/SignalBot/raw/master/swagger.yaml) is availble for the *OpenAPI 2.0* standard.
 
 
+TODO - make a cloud formation stack that takes a RDS snapshot as input
+builds the right DB target;  for the purpose of being able to have a code source (GitHub or CodeCommit) be able to trigger builds from a specific branch.
+
+The serverless.yml should be 'aware' of the branch; and be able to pull the config
+
+
+
+
+
 ### Contents
 * [Architecture](#architecture)
 * [REST API](#api)
+* [Code](#code)
 * [Install](#install)
 * [References](#references)
 
@@ -21,8 +31,8 @@ In addition the *pyapi.py* utility can maintain a list of endpoints for POST/GET
 [back to top](#purpose)
 
 There are four basic components to the Architecture
-* Foundational components - Domain Name, and SSL certs must be set up (Route53, and Certificate Manager)
-* Framework components - S3 buckets, Cloud Resources (SNS, Parameter Manager)
+* Foundational components - Hosted Zone, and SSL certs must be set up (Route53, and Certificate Manager) independent of any AWS templates or configuration
+* Framework components - S3 buckets, Cloud Resources (SNS, Parameter Manager) generated for each environment with *bot-cfn-base.json* template
 * API Layer - Lambda/API Gateway configuration providing REST interface
 * Persistence Layer - A DynamoDB and a PostgreSQL RDS implementation are provided
 
@@ -66,14 +76,25 @@ Open this link with
 
 
 
-## Install
-[back to top](#purpose)
+ ## Code
+ [back to top](#purpose)
+
+Explain layout of code.
+
+Use 'develop', 'test', and 'master' branch to reflect environments.
+
+
+
+
+
+ ## Install
+ [back to top](#purpose)
 
 The install path depends on the API implementation, there are several common steps.
 
 ### Prerequistes
 
-Before running any scripts of utilities in this repository, there must be an AWS account, with a hosted zone and two SSL certs created in the *us-east-1* region.
+Before running any scripts of utilities in this repository, there must be an AWS account, with a hosted zone and two SSL certs created in the *us-east-1* region. Two **A** record will be created.
 
 * a Hosted Zone must exist in the AWS account
 * SSL certs for the web host and the api need to be created in the us-east-1 Zone
@@ -91,6 +112,7 @@ Currently the serverless.yml is hardcoded to look for **botbase**
 * *CloudFront* distribution
 * *Route53* DNS Entries for Web
 * Stores key parameters in the *Parameter Store*
+* *CodeBuild* project is set up with GitHub source (which docker image to build with and how to set environment variables)
 
 You can run the Cloud Formation templates either from a CLI, or the AWS console.
 
@@ -98,7 +120,11 @@ You can run the Cloud Formation templates either from a CLI, or the AWS console.
 
 
 In order to deplpy the Serverless code, we need to set up a SLS workstation, there is a template that does this
-Next, create a SLS workstation, and deploy the serverless components (the workstation is created because need to run the *NodeJS* commands and need appropriate system permissions)
+Next, create a SLS workstation, and deploy the serverless components (the workstation is created because need to run the *NodeJS* commands and need appropriate system permissions).
+
+
+Can I do all this with a docker image instead?
+
 
 Use the Cloud Formation template from *mcliff1/aws* [ec2-slsworkstation](https://github.com/mcliff1/aws/blob/master/ec2-slsworkstation.json)
 

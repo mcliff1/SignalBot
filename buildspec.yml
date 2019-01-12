@@ -1,5 +1,7 @@
 # uses aws/codebuild/nodejs:8.11.0
-#
+#   this is used in the bot-cfn-base.json cloud formation stack
+# Properties
+#    WEB_BUCKET
 version: 0.2
 
 #
@@ -15,6 +17,7 @@ phases:
   post_build:
     commands:
       - aws s3 sync ./build s3://$WEB_BUCKET/ --delete --acl public-read
+      - echo Build completed on `date`
 
 artifacts:
   files:
