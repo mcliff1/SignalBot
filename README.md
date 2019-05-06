@@ -15,7 +15,14 @@ builds the right DB target;  for the purpose of being able to have a code source
 The serverless.yml should be 'aware' of the branch; and be able to pull the config
 
 
+### May 4, 2019
 
+  Goals - create the base Stack (creates roles, build bucket)
+        - create DB stack (RDS)
+        - create SSM param for branch (parameter for CI process)
+          - web name
+          - domain name
+        - each check-in CI process will runs sam deploy on the rest
 
 
 ### Contents
