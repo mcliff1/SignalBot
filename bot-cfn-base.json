@@ -385,39 +385,6 @@
       }
     },
 
-    "CodeBuild": {
-      "Type" : "AWS::CodeBuild::Project",
-      "DependsOn" : "CodeBuildRole",
-      "Properties" : {
-        "Name" : { "Ref" : "AWS::StackName" },
-        "Description" : "Application Code Build and Deployment",
-        "Artifacts" : {
-          "Type" : "no_artifacts"
-        },
-        "Environment" : {
-          "Type" : "LINUX_CONTAINER",
-          "ComputeType" : "BUILD_GENERAL1_SMALL",
-          "Image" : "aws/codebuild/nodejs:8.11.0",
-          "EnvironmentVariables" : [
-            {
-              "Name" : "WEB_BUCKET",
-              "Value" : { "Ref" : "WebBucket" }
-            }
-          ]
-        },
-        "ServiceRole" : { "Ref" : "CodeBuildRole" },
-        "Source" : {
-          "Type" : "GITHUB",
-          "Location" : { "Ref" : "GitHubSource"},
-          "GitCloneDepth" : 1
-        },
-        "Tags" : [
-          { "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-CodeBuild"]]}},
-          { "Key" : "Project", "Value" : {"Ref": "Project"} }
-        ]
-      }
-    },
-
 
 
     "ssmDomainName": {
