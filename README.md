@@ -15,6 +15,12 @@ builds the right DB target;  for the purpose of being able to have a code source
 The serverless.yml should be 'aware' of the branch; and be able to pull the config
 
 
+### Aug 18, 2019
+
+haven't touched this in a while;  there is no automated build environment; we have a develop and master branch only.
+
+
+
 ### May 4, 2019
 
   Goals - create the base Stack (creates roles, build bucket)
